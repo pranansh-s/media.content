@@ -1,0 +1,125 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --background: #faf8f4;
+  --surface: #ffffff;
+  --surface-raised: #f3efe8;
+  --border: #e4ddd0;
+  --border-strong: #cfc5b2;
+  --foreground: #201b14;
+  --muted: #6e655a;
+  --faint: #a99e8e;
+  --accent: #b36e08;
+  --accent-strong: #935903;
+  --accent-ink: #fff9ef;
+  --accent-soft: #f4e3c4;
+  --wire: #cfc5b2;
+  --danger: #b3382c;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #141210;
+  --surface: #1d1a16;
+  --surface-raised: #26221c;
+  --border: #2e2922;
+  --border-strong: #453d31;
+  --foreground: #f2ede4;
+  --muted: #a2988a;
+  --faint: #6b6155;
+  --accent: #f0a33b;
+  --accent-strong: #f7b95e;
+  --accent-ink: #1a1206;
+  --accent-soft: #3a2c14;
+  --wire: #453d31;
+  --danger: #e06a5c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-wire: var(--wire);
+  --color-danger: var(--danger);
+  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-atkinson);
+  --font-mono: var(--font-plex-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+@layer base {
+  button:not(:disabled),
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+@keyframes wire-pulse {
+  from {
+    left: -36px;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.wire-line {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+}
+
+.wire-line::before {
+  content: '';
+  position: absolute;
+  top: 1.5px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--wire);
+}
+
+.wire-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -36px;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent));
+  animation: wire-pulse 3.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wire-line::after {
+    animation: none;
+    opacity: 0;
+  }
+}

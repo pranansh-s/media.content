@@ -1,0 +1,8 @@
+packages:
+  - web
+  - server
+  - shared
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
