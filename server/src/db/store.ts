@@ -272,6 +272,17 @@ export function createStore(db: Database) {
       updateAssetStatusStmt.run(status, id);
     },
 
+    failInFlightAssets(campaignId: string) {
+      db.prepare(
+        "UPDATE assets SET status = 'failed' WHERE campaign_id = ? AND status IN ('pending','generating')",
+      ).run(campaignId);
+    },
+
+    reconcileStuckStatuses() {
+      db.prepare("UPDATE assets SET status = 'failed' WHERE status IN ('pending','generating')").run();
+      db.prepare("UPDATE campaigns SET status = 'failed' WHERE status = 'generating'").run();
+    },
+
     appendRevision(assetId: string, revision: TextRevision | ImageRevision): Asset {
       const { next } = nextPositionStmt.get(assetId) as { next: number };
       insertRevisionStmt.run(
@@ -288,11 +299,51 @@ export function createStore(db: Database) {
       return hydrateAsset(getAssetStmt.get(assetId) as AssetRow);
     },
 
-    listCampaigns(brandId: string): CampaignSummary[] {
-      return (listCampaignsStmt.all(brandId) as CampaignRow[]).map(row => {
+    listCampaigns(brandId: string, query?: string): CampaignSummary[] {
+      const rows = query
+        ? (db
+            .prepare(
+              'SELECT * FROM campaigns WHERE brand_id = ? AND prompt LIKE ? ORDER BY created_at DESC',
+            )
+            .all(brandId, `%${query}%`) as CampaignRow[])
+        : (listCampaignsStmt.all(brandId) as CampaignRow[]);
+      return rows.map(row => {
         const { assets: _assets, ...summary } = hydrateCampaign(row);
         return summary;
       });
+    },
+
+    listImageUrlsForCampaign(campaignId: string): string[] {
+      const rows = db
+        .prepare(
+          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id WHERE a.campaign_id = ? AND r.url IS NOT NULL',
+        )
+        .all(campaignId) as { url: string }[];
+      return rows.map(r => r.url);
+    },
+
+    listImageUrlsForBrand(brandId: string): string[] {
+      const rows = db
+        .prepare(
+          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id JOIN campaigns c ON c.id = a.campaign_id WHERE c.brand_id = ? AND r.url IS NOT NULL',
+        )
+        .all(brandId) as { url: string }[];
+      return rows.map(r => r.url);
+    },
+
+    deleteCampaign(campaignId: string): boolean {
+      const result = db.prepare('DELETE FROM campaigns WHERE id = ?').run(campaignId);
+      return result.changes > 0;
+    },
+
+    getRevision(assetId: string, revisionId: string): (TextRevision | ImageRevision) & { kind: 'text' | 'image' } | null {
+      const assetRow = getAssetStmt.get(assetId) as AssetRow | undefined;
+      if (!assetRow) return null;
+      const row = db
+        .prepare('SELECT * FROM revisions WHERE id = ? AND asset_id = ?')
+        .get(revisionId, assetId) as RevisionRow | undefined;
+      if (!row) return null;
+      return { ...toRevision(row, assetRow.kind), kind: assetRow.kind };
     },
 
     getCampaign(id: string): Campaign | null {
@@ -328,6 +379,23 @@ export function createStore(db: Database) {
 
     appendChunk(brandId: string, source: ChunkSource, ref: string | null, text: string, embedding: Float32Array) {
       insertChunkStmt.run(randomUUID(), brandId, source, ref, text, Buffer.from(embedding.buffer));
+    },
+
+    appendChunkIfUnderCap(
+      brandId: string,
+      source: ChunkSource,
+      ref: string | null,
+      text: string,
+      embedding: Float32Array,
+      cap: number,
+    ): boolean {
+      const tx = db.transaction(() => {
+        const { count } = countChunksBySourceStmt.get(brandId, source) as { count: number };
+        if (count >= cap) return false;
+        insertChunkStmt.run(randomUUID(), brandId, source, ref, text, Buffer.from(embedding.buffer));
+        return true;
+      });
+      return tx();
     },
 
     listChunks(brandId: string): BrandChunk[] {

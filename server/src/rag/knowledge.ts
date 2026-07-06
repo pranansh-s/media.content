@@ -38,6 +38,9 @@ export async function ingestBrand(
 
   const texts = [...referenceChunks, ...urlChunks.map(chunk => chunk.text)];
   const embeddings = texts.length ? await embedder(texts) : [];
+  if (embeddings.length !== texts.length) {
+    throw new Error(`Embedder returned ${embeddings.length} embeddings for ${texts.length} inputs`);
+  }
 
   store.replaceChunks(
     brand.id,
@@ -67,7 +70,8 @@ export async function ingestRevision(
   if (store.countChunks(brandId, 'revision') >= cap) return;
   const text = body.slice(0, 1500);
   const [embedding] = await embedder([text]);
-  store.appendChunk(brandId, 'revision', channel, text, embedding!);
+  if (!embedding) return;
+  store.appendChunkIfUnderCap(brandId, 'revision', channel, text, embedding, cap);
 }
 
 export async function retrieve(

@@ -25,7 +25,8 @@ export async function generateCampaignPlan(
       abortSignal: args.signal,
     });
     return result.object;
-  } catch {
+  } catch (error) {
+    if (args.signal?.aborted || (error as Error)?.name === 'AbortError') throw error;
     return null;
   }
 }

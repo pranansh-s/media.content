@@ -5,7 +5,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useStudioStore } from '@/stores/studio';
 
-import { createCampaign, fetchBrands, fetchCampaign, fetchCampaigns, refineAsset, regenerateAsset, saveRevision } from './api';
+import {
+  createCampaign,
+  deleteCampaign,
+  fetchBrands,
+  fetchCampaign,
+  fetchCampaigns,
+  refineAsset,
+  regenerateAsset,
+  restoreRevision,
+  saveRevision,
+} from './api';
 
 export function useBrands() {
   const brands = useStudioStore(s => s.brands);
@@ -16,16 +26,16 @@ export function useBrands() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchBrands()
-      .then(loaded => {
+    void (async () => {
+      try {
+        const loaded = await fetchBrands();
         if (!cancelled) setBrands(loaded);
-      })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
-      })
-      .finally(() => {
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load brands');
+      } finally {
         if (!cancelled) setIsLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -42,15 +52,16 @@ export function useCampaignHistory() {
   const loadCampaign = useStudioStore(s => s.loadCampaign);
   const isGenerating = useStudioStore(s => s.isGenerating);
   const [isOpening, setIsOpening] = useState(false);
+  const [query, setQuery] = useState('');
 
   const refresh = useCallback(async () => {
     if (!activeBrandId) return;
     try {
-      setCampaignSummaries(await fetchCampaigns(activeBrandId));
+      setCampaignSummaries(await fetchCampaigns(activeBrandId, query || undefined));
     } catch {
       setCampaignSummaries([]);
     }
-  }, [activeBrandId, setCampaignSummaries]);
+  }, [activeBrandId, query, setCampaignSummaries]);
 
   useEffect(() => {
     void refresh();
@@ -68,7 +79,15 @@ export function useCampaignHistory() {
     [loadCampaign]
   );
 
-  return { campaignSummaries, openCampaign, isOpening, refresh };
+  const removeCampaign = useCallback(
+    async (campaignId: string) => {
+      await deleteCampaign(campaignId);
+      await refresh();
+    },
+    [refresh]
+  );
+
+  return { campaignSummaries, openCampaign, isOpening, refresh, query, setQuery, removeCampaign };
 }
 
 export function useGenerateCampaign() {
@@ -153,4 +172,27 @@ export function useRegenerateAsset() {
 export function useSaveRevision() {
   const { run, isPending, error } = useAssetAction(saveRevision);
   return { save: run, isSaving: isPending, error };
+}
+
+export function useRestoreRevision() {
+  const upsertAsset = useStudioStore(s => s.upsertAsset);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const restore = useCallback(
+    async (assetId: string, revisionId: string) => {
+      setIsRestoring(true);
+      setError(null);
+      try {
+        upsertAsset(await restoreRevision(assetId, revisionId));
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Restore failed');
+        return false;
+      } finally {
+        setIsRestoring(false);
+      }
+    },
+    [upsertAsset]
+  );
+  return { restore, isRestoring, error };
 }

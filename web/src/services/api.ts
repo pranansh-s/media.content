@@ -48,9 +48,30 @@ export async function deleteBrand(brandId: string): Promise<void> {
   await ensureOk(await fetch(`/api/brands/${brandId}`, { method: 'DELETE' }));
 }
 
-export async function fetchCampaigns(brandId: string): Promise<CampaignSummary[]> {
-  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns`));
+export async function fetchCampaigns(brandId: string, query?: string): Promise<CampaignSummary[]> {
+  const suffix = query ? `?q=${encodeURIComponent(query)}` : '';
+  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns${suffix}`));
   return listCampaignsResponseSchema.parse(await res.json()).campaigns;
+}
+
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  await ensureOk(await fetch(`/api/campaigns/${campaignId}`, { method: 'DELETE' }));
+}
+
+export interface CampaignExport {
+  campaignId: string;
+  prompt: string;
+  createdAt: string;
+  assets: Array<{ channel: string; kind: 'text'; body: string } | { channel: string; kind: 'image'; url: string; alt: string }>;
+}
+
+export async function exportCampaign(campaignId: string): Promise<CampaignExport> {
+  const res = await ensureOk(await fetch(`/api/campaigns/${campaignId}/export`));
+  return (await res.json()) as CampaignExport;
+}
+
+export function restoreRevision(assetId: string, revisionId: string): Promise<Asset> {
+  return assetRequest(`/api/assets/${assetId}/revisions/${revisionId}/restore`);
 }
 
 export async function fetchCampaign(campaignId: string): Promise<Campaign> {

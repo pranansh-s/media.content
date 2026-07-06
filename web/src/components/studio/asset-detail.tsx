@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { FieldLabel } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag } from '@/components/ui/tag';
-import { useRefineAsset, useRegenerateAsset, useSaveRevision } from '@/services/hooks';
+import { useRefineAsset, useRegenerateAsset, useRestoreRevision, useSaveRevision } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
 const TextEditor = dynamic(() => import('./editor').then(m => m.TextEditor), {
@@ -28,6 +28,7 @@ export function AssetDetail() {
   const { refine, isRefining, error } = useRefineAsset();
   const { regenerate, isRegenerating, error: regenerateError } = useRegenerateAsset();
   const { save, isSaving, error: saveError } = useSaveRevision();
+  const { restore, isRestoring, error: restoreError } = useRestoreRevision();
   const [revisionIndex, setRevisionIndex] = useState<number | null>(null);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [draft, setDraft] = useState('');
@@ -35,7 +36,18 @@ export function AssetDetail() {
   const revisions = asset?.revisions ?? [];
   const activeIndex = revisionIndex !== null && revisionIndex < revisions.length ? revisionIndex : revisions.length - 1;
   const revision = revisions[activeIndex];
-  const isBusy = isRefining || isRegenerating || isSaving;
+  const isBusy = isRefining || isRegenerating || isSaving || isRestoring;
+
+  const copyToClipboard = async () => {
+    if (!revision || !('body' in revision)) return;
+    await navigator.clipboard.writeText(revision.body);
+  };
+
+  const restoreCurrentRevision = async () => {
+    if (!asset || !revision || activeIndex === revisions.length - 1) return;
+    await restore(asset.id, revision.id);
+    setRevisionIndex(null);
+  };
   const isDirty =
     asset?.kind === 'text' && revision && 'body' in revision && draft.trim().length > 0 && draft !== revision.body;
 
@@ -65,7 +77,7 @@ export function AssetDetail() {
   };
 
   const open = Boolean(asset && revision);
-  const actionError = error ?? regenerateError ?? saveError;
+  const actionError = error ?? regenerateError ?? saveError ?? restoreError;
 
   return (
     <Drawer open={open} label={asset ? `Edit ${CHANNEL_LABELS[asset.channel]} draft` : 'Edit draft'} onClose={close}>
@@ -108,13 +120,29 @@ export function AssetDetail() {
               )
             )}
             {revision.prompt && <RefinedWith>refined with: &ldquo;{revision.prompt}&rdquo;</RefinedWith>}
-            {asset.kind === 'text' && (
-              <DraftRow>
-                <SaveButton type="button" onClick={saveDraft} disabled={!isDirty || isBusy}>
-                  {isSaving ? 'saving edit…' : isDirty ? 'save edit as new rev' : 'edits save as a new rev'}
+            <DraftRow>
+              {asset.kind === 'text' ? (
+                <>
+                  <SaveButton type="button" onClick={copyToClipboard} disabled={!revision || !('body' in revision)}>
+                    copy
+                  </SaveButton>
+                  <SaveButton type="button" onClick={saveDraft} disabled={!isDirty || isBusy}>
+                    {isSaving ? 'saving edit…' : isDirty ? 'save edit as new rev' : 'edits save as a new rev'}
+                  </SaveButton>
+                </>
+              ) : (
+                'url' in revision && (
+                  <SaveButton as="a" href={revision.url} download aria-label="Download image">
+                    download
+                  </SaveButton>
+                )
+              )}
+              {activeIndex !== revisions.length - 1 && (
+                <SaveButton type="button" onClick={restoreCurrentRevision} disabled={isBusy}>
+                  {isRestoring ? 'restoring…' : 'restore this rev'}
                 </SaveButton>
-              </DraftRow>
-            )}
+              )}
+            </DraftRow>
           </Body>
 
           <RefineSection>
