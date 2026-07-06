@@ -1,27 +1,27 @@
 'use client';
 
-import type { CreateCampaignRequest, Project } from '@media-content/shared';
+import type { Brand, CreateCampaignRequest } from '@media-content/shared';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useStudioStore } from '@/stores/studio';
 
-import { createCampaign, fetchProject, refineAsset } from './api';
+import { createCampaign, fetchBrand, refineAsset } from './api';
 
-export function useProject() {
-  const [project, setProject] = useState<Project | null>(null);
+export function useBrand() {
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetchProject()
-      .then(p => !cancelled && setProject(p))
+    fetchBrand()
+      .then(b => !cancelled && setBrand(b))
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return { project, setProject, error, isLoading: !project && !error };
+  return { brand, setBrand, error, isLoading: !brand && !error };
 }
 
 export function useGenerateCampaign() {

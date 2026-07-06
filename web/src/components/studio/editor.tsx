@@ -22,7 +22,7 @@ export function TextEditor({ revisionId, body }: { revisionId: string; body: str
     editorProps: {
       attributes: {
         class:
-          'min-h-48 rounded-md border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-foreground focus:outline-2 focus:outline-offset-1 focus:outline-accent [&_p]:my-1.5',
+          'min-h-48 rounded-md border border-border bg-surface px-4 py-3 text-sm leading-relaxed break-words text-foreground focus:outline-2 focus:outline-offset-1 focus:outline-accent [&_p]:my-1.5',
       },
     },
   });

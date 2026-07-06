@@ -129,13 +129,13 @@ export function Voice() {
         <p className="font-mono text-xs uppercase tracking-widest text-accent">Brand & voice</p>
         <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">Sounds like you, everywhere</h2>
         <p className="mt-4 max-w-md text-muted">
-          Each project holds your brand — name, links, colors, voice notes — and the writing styles you switch between.
-          A casual dev update and a formal press announcement come from the same brief, without retyping who you are.
+          Your brand holds who you are — name, tagline, writing style, and the references that show how you sound. A
+          casual dev update and a formal press announcement come from the same brief, without retyping who you are.
         </p>
       </div>
       <div className="rounded-lg border border-border bg-surface p-5 font-mono text-xs leading-loose text-muted">
         <p>
-          <span className="text-faint">project:</span> Acme Dev Tools
+          <span className="text-faint">brand:</span> Acme
         </p>
         <p>
           <span className="text-faint">voice:</span> confident, technical, no hype words

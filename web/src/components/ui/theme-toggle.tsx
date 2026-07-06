@@ -29,7 +29,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       <span className={cn('size-1.5 rounded-full', isDark ? 'bg-accent' : 'bg-border-strong')} />
-      {mounted ? (isDark ? 'studio' : 'daylight') : '···'}
+      {mounted ? (isDark ? 'midnight' : 'daylight') : '···'}
     </button>
   );
 }

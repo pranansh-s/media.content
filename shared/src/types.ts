@@ -2,27 +2,34 @@ import type { z } from 'zod';
 
 import type {
   apiErrorSchema,
+  assetResponseSchema,
   assetSchema,
   assetStatusSchema,
-  brandProfileSchema,
+  brandSchema,
   campaignEventSchema,
+  campaignPlanSchema,
   campaignSchema,
   campaignStatusSchema,
+  campaignSummarySchema,
+  createBrandRequestSchema,
   createCampaignRequestSchema,
   generatableChannelSchema,
-  getProjectResponseSchema,
+  getBrandResponseSchema,
+  getCampaignResponseSchema,
   imageAssetSchema,
   imageChannelSchema,
   imageRevisionSchema,
-  projectSchema,
+  listBrandsResponseSchema,
+  listCampaignsResponseSchema,
   refineAssetRequestSchema,
-  refineAssetResponseSchema,
+  revisionSourceSchema,
+  saveRevisionRequestSchema,
+  styleIdSchema,
   textAssetSchema,
-  updateBrandRequestSchema,
   textChannelSchema,
   textRevisionSchema,
+  updateBrandRequestSchema,
   videoChannelSchema,
-  writingStyleSchema,
 } from './schemas';
 
 export type TextChannel = z.infer<typeof textChannelSchema>;
@@ -31,19 +38,26 @@ export type VideoChannel = z.infer<typeof videoChannelSchema>;
 export type GeneratableChannel = z.infer<typeof generatableChannelSchema>;
 export type AssetStatus = z.infer<typeof assetStatusSchema>;
 export type CampaignStatus = z.infer<typeof campaignStatusSchema>;
+export type RevisionSource = z.infer<typeof revisionSourceSchema>;
 export type TextRevision = z.infer<typeof textRevisionSchema>;
 export type ImageRevision = z.infer<typeof imageRevisionSchema>;
 export type TextAsset = z.infer<typeof textAssetSchema>;
 export type ImageAsset = z.infer<typeof imageAssetSchema>;
 export type Asset = z.infer<typeof assetSchema>;
+export type CampaignPlan = z.infer<typeof campaignPlanSchema>;
 export type Campaign = z.infer<typeof campaignSchema>;
-export type BrandProfile = z.infer<typeof brandProfileSchema>;
-export type WritingStyle = z.infer<typeof writingStyleSchema>;
-export type Project = z.infer<typeof projectSchema>;
+export type CampaignSummary = z.infer<typeof campaignSummarySchema>;
+export type Brand = z.infer<typeof brandSchema>;
+export type StyleId = z.infer<typeof styleIdSchema>;
 export type CreateCampaignRequest = z.infer<typeof createCampaignRequestSchema>;
+export type CreateBrandRequest = z.infer<typeof createBrandRequestSchema>;
 export type UpdateBrandRequest = z.infer<typeof updateBrandRequestSchema>;
 export type RefineAssetRequest = z.infer<typeof refineAssetRequestSchema>;
-export type RefineAssetResponse = z.infer<typeof refineAssetResponseSchema>;
-export type GetProjectResponse = z.infer<typeof getProjectResponseSchema>;
+export type SaveRevisionRequest = z.infer<typeof saveRevisionRequestSchema>;
+export type AssetResponse = z.infer<typeof assetResponseSchema>;
+export type GetBrandResponse = z.infer<typeof getBrandResponseSchema>;
+export type ListBrandsResponse = z.infer<typeof listBrandsResponseSchema>;
+export type ListCampaignsResponse = z.infer<typeof listCampaignsResponseSchema>;
+export type GetCampaignResponse = z.infer<typeof getCampaignResponseSchema>;
 export type CampaignEvent = z.infer<typeof campaignEventSchema>;
 export type ApiError = z.infer<typeof apiErrorSchema>;

@@ -36,7 +36,7 @@ export class FixtureProvider implements ContentProvider {
   async generateText(spec: TextSpec): Promise<string> {
     await this.delay();
     const base = TEXT_FIXTURES[spec.channel](spec.prompt, spec.brand.name);
-    const styled = spec.style ? `${base}\n\n[voice: ${spec.style.name} — ${spec.style.description}]` : base;
+    const styled = spec.style ? `${base}\n\n[voice: ${spec.style}]` : base;
     return spec.refinementPrompt ? refined(spec.previousBody ?? styled, spec.refinementPrompt) : styled;
   }
 

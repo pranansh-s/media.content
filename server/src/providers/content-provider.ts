@@ -1,19 +1,23 @@
-import type { BrandProfile, ImageChannel, TextChannel, WritingStyle } from '@media-content/shared';
+import type { Brand, CampaignPlan, ImageChannel, TextChannel } from '@media-content/shared';
 
 export interface TextSpec {
   channel: TextChannel;
   prompt: string;
-  brand: BrandProfile;
-  style: WritingStyle | null;
+  brand: Brand;
+  style: string | null;
+  plan?: CampaignPlan | null;
+  evidence?: string[];
   previousBody?: string;
   refinementPrompt?: string;
+  signal?: AbortSignal;
 }
 
 export interface ImageSpec {
   channel: ImageChannel;
   prompt: string;
-  brand: BrandProfile;
+  brand: Brand;
   refinementPrompt?: string;
+  signal?: AbortSignal;
 }
 
 export interface GeneratedImage {

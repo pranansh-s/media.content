@@ -3,23 +3,29 @@
 import {
   CUSTOM_STYLE_MAX_LENGTH,
   GENERATABLE_CHANNELS,
+  PRESET_STYLES,
+  PROMPT_MAX_LENGTH,
   VIDEO_CHANNELS,
+  type Brand,
   type GeneratableChannel,
-  type Project,
+  type StyleId,
 } from '@media-content/shared';
 import { useState } from 'react';
+import tw from 'tailwind-styled-components';
 
 import { CHANNEL_LABELS } from '@/constants/channels';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Textarea } from '@/components/ui/input';
+import { FieldLabel } from '@/components/ui/label';
+import { Select, type SelectOption } from '@/components/ui/select';
 import { useGenerateCampaign } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
-export function Composer({ project }: { project: Project }) {
+export function Composer({ brand }: { brand: Brand }) {
   const [prompt, setPrompt] = useState('');
   const [channels, setChannels] = useState<GeneratableChannel[]>(['tweet', 'linkedin']);
-  const [styleId, setStyleId] = useState('');
+  const [styleId, setStyleId] = useState<'' | 'custom' | StyleId>('');
   const [customStyle, setCustomStyle] = useState('');
   const isGenerating = useStudioStore(s => s.isGenerating);
   const generate = useGenerateCampaign();
@@ -35,21 +41,23 @@ export function Composer({ project }: { project: Project }) {
     !isGenerating &&
     (!isCustomStyle || customStyle.trim().length > 0);
 
-  const styleRequest = isCustomStyle
-    ? { customStyle: customStyle.trim() }
-    : styleId
-      ? { writingStyleId: styleId }
-      : {};
+  const styleRequest = isCustomStyle ? { customStyle: customStyle.trim() } : styleId ? { styleId } : {};
+
+  const styleOptions: SelectOption[] = [
+    { value: '', label: 'No preference' },
+    ...(brand.writingStyle ? [{ value: 'brand', label: `${brand.name} voice` }] : []),
+    ...PRESET_STYLES.map(style => ({ value: style.id, label: style.name, description: style.description })),
+    { value: 'custom', label: 'Describe your own…' },
+  ];
 
   return (
-    <section aria-label="Brief composer" className="flex flex-col gap-5">
+    <Section aria-label="Brief composer">
       <div>
-        <label htmlFor="brief" className="font-mono text-xs uppercase tracking-widest text-accent">
-          The brief
-        </label>
+        <BriefLabel htmlFor="brief">The brief</BriefLabel>
         <Textarea
           id="brief"
           rows={5}
+          maxLength={PROMPT_MAX_LENGTH}
           value={prompt}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}
           placeholder="What happened? A launch, a release, a raise, a hire — say it plainly."
@@ -58,8 +66,8 @@ export function Composer({ project }: { project: Project }) {
       </div>
 
       <div>
-        <p className="font-mono text-xs uppercase tracking-widest text-muted">Channels</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <FieldLabel $as="p">Channels</FieldLabel>
+        <ChipRow>
           {GENERATABLE_CHANNELS.map(channel => (
             <Chip key={channel} selected={channels.includes(channel)} onClick={() => toggleChannel(channel)}>
               {CHANNEL_LABELS[channel]}
@@ -70,27 +78,19 @@ export function Composer({ project }: { project: Project }) {
               {CHANNEL_LABELS[channel]} · soon
             </Chip>
           ))}
-        </div>
+        </ChipRow>
       </div>
 
       <div>
-        <label htmlFor="style" className="font-mono text-xs uppercase tracking-widest text-muted">
-          Writing style
-        </label>
-        <select
-          id="style"
-          value={styleId}
-          onChange={e => setStyleId(e.target.value)}
-          className="mt-2 h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-        >
-          <option value="">Project default</option>
-          {project.writingStyles.map(style => (
-            <option key={style.id} value={style.id}>
-              {style.name} — {style.description}
-            </option>
-          ))}
-          <option value="custom">Describe your own…</option>
-        </select>
+        <FieldLabel htmlFor="style">Writing style</FieldLabel>
+        <div className="mt-2">
+          <Select
+            id="style"
+            value={styleId}
+            options={styleOptions}
+            onChange={value => setStyleId(value as '' | 'custom' | StyleId)}
+          />
+        </div>
         {isCustomStyle && (
           <Textarea
             aria-label="Describe your writing style"
@@ -111,6 +111,18 @@ export function Composer({ project }: { project: Project }) {
       >
         {isGenerating ? 'On the wire…' : 'Put it on the wire'}
       </Button>
-    </section>
+    </Section>
   );
 }
+
+const Section = tw.section`
+  flex flex-col gap-5
+`;
+
+const BriefLabel = tw(FieldLabel)`
+  text-accent
+`;
+
+const ChipRow = tw.div`
+  mt-2 flex flex-wrap gap-2
+`;

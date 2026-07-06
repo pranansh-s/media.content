@@ -1,14 +1,17 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { REFINE_PROMPT_MAX_LENGTH } from '@media-content/shared';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import tw from 'tailwind-styled-components';
 
 import { CHANNEL_LABELS, CHANNEL_TAGS } from '@/constants/channels';
 import { Button } from '@/components/ui/button';
+import { Drawer, DrawerClose } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
+import { FieldLabel } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/cn';
+import { Tag } from '@/components/ui/tag';
 import { useRefineAsset } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
@@ -34,15 +37,6 @@ export function AssetDetail() {
     setRefinePrompt('');
   };
 
-  useEffect(() => {
-    if (!asset) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') selectAsset(null);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [asset, selectAsset]);
-
   const sendRefinement = async () => {
     if (!asset || refinePrompt.trim().length === 0) return;
     await refine(asset.id, refinePrompt.trim());
@@ -50,102 +44,110 @@ export function AssetDetail() {
     setRevisionIndex(null);
   };
 
+  const open = Boolean(asset && revision);
+
   return (
-    <AnimatePresence>
+    <Drawer open={open} label={asset ? `Edit ${CHANNEL_LABELS[asset.channel]} draft` : 'Edit draft'} onClose={close}>
       {asset && revision && (
         <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={close}
-            className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm"
-          />
-          <motion.aside
-            role="dialog"
-            aria-label={`Edit ${CHANNEL_LABELS[asset.channel]} draft`}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-y-0 right-0 z-40 flex w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-background p-6"
-          >
-            <div className="flex items-center gap-2">
-              <span className="inline-flex rounded border border-border bg-surface-raised px-1.5 py-0.5 font-mono text-[10px] text-accent">
-                {CHANNEL_TAGS[asset.channel]}
-              </span>
-              <h2 className="font-display text-lg font-bold">{CHANNEL_LABELS[asset.channel]}</h2>
-              <button
+          <TitleRow>
+            <Tag>{CHANNEL_TAGS[asset.channel]}</Tag>
+            <Title>{CHANNEL_LABELS[asset.channel]}</Title>
+            <DrawerClose onClose={close} label="Close editor" />
+          </TitleRow>
+
+          <RevisionRow>
+            {revisions.map((rev, index) => (
+              <RevisionPill
+                key={rev.id}
                 type="button"
-                onClick={close}
-                aria-label="Close editor"
-                className="ml-auto rounded-md px-2 py-1 font-mono text-xs text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
+                onClick={() => setRevisionIndex(index)}
+                $active={index === activeIndex}
               >
-                esc ✕
-              </button>
-            </div>
+                rev {index + 1}
+              </RevisionPill>
+            ))}
+          </RevisionRow>
 
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {revisions.map((rev, index) => (
-                <button
-                  key={rev.id}
-                  type="button"
-                  onClick={() => setRevisionIndex(index)}
-                  className={cn(
-                    'rounded border px-2 py-0.5 font-mono text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-accent',
-                    index === activeIndex
-                      ? 'border-accent bg-accent-soft text-foreground'
-                      : 'border-border text-muted hover:text-foreground'
-                  )}
-                >
-                  rev {index + 1}
-                </button>
-              ))}
-            </div>
+          <Body>
+            {asset.kind === 'text' ? (
+              <TextEditor revisionId={revision.id} body={'body' in revision ? revision.body : ''} />
+            ) : (
+              'url' in revision && (
+                <figure>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={revision.url} alt={revision.alt} className="w-full rounded-lg border border-border" />
+                  <Caption>{revision.alt}</Caption>
+                </figure>
+              )
+            )}
+            {revision.prompt && <RefinedWith>refined with: &ldquo;{revision.prompt}&rdquo;</RefinedWith>}
+          </Body>
 
-            <div className="mt-4 flex-1">
-              {asset.kind === 'text' ? (
-                <TextEditor revisionId={revision.id} body={'body' in revision ? revision.body : ''} />
-              ) : (
-                'url' in revision && (
-                  <figure>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={revision.url} alt={revision.alt} className="w-full rounded-lg border border-border" />
-                    <figcaption className="mt-2 font-mono text-xs text-faint">{revision.alt}</figcaption>
-                  </figure>
-                )
-              )}
-              {revision.prompt && (
-                <p className="mt-3 font-mono text-xs text-faint">refined with: &ldquo;{revision.prompt}&rdquo;</p>
-              )}
-            </div>
-
-            <div className="mt-6 border-t border-border pt-4">
-              <label htmlFor="refine" className="font-mono text-xs uppercase tracking-widest text-muted">
-                Tell it what to change
-              </label>
-              <div className="mt-2 flex gap-2">
-                <Input
-                  id="refine"
-                  value={refinePrompt}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRefinePrompt(e.target.value)}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && sendRefinement()}
-                  placeholder={
-                    asset.kind === 'text'
-                      ? '"shorter", "more technical", "add the link"'
-                      : '"warmer colors", "less busy"'
-                  }
-                  disabled={isRefining}
-                />
-                <Button onClick={sendRefinement} disabled={isRefining || refinePrompt.trim().length === 0}>
-                  {isRefining ? 'Rewriting…' : 'Rewrite'}
-                </Button>
-              </div>
-              {error && <p className="mt-2 text-sm text-danger">{error}</p>}
-            </div>
-          </motion.aside>
+          <RefineSection>
+            <FieldLabel htmlFor="refine">Tell it what to change</FieldLabel>
+            <RefineRow>
+              <Input
+                id="refine"
+                maxLength={REFINE_PROMPT_MAX_LENGTH}
+                value={refinePrompt}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRefinePrompt(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && sendRefinement()}
+                placeholder={
+                  asset.kind === 'text' ? '"shorter", "more technical", "add the link"' : '"warmer colors", "less busy"'
+                }
+                disabled={isRefining}
+              />
+              <Button onClick={sendRefinement} disabled={isRefining || refinePrompt.trim().length === 0}>
+                {isRefining ? 'Rewriting…' : 'Rewrite'}
+              </Button>
+            </RefineRow>
+            {error && <ErrorText>{error}</ErrorText>}
+          </RefineSection>
         </>
       )}
-    </AnimatePresence>
+    </Drawer>
   );
 }
+
+const TitleRow = tw.div`
+  flex items-center gap-2
+`;
+
+const Title = tw.h2`
+  font-display text-lg font-bold
+`;
+
+const RevisionRow = tw.div`
+  mt-4 flex flex-wrap gap-1.5
+`;
+
+const RevisionPill = tw.button<{ $active: boolean }>`
+  rounded border px-2 py-0.5 font-mono text-[11px] transition-colors
+  focus-visible:outline-2 focus-visible:outline-accent
+  ${p => (p.$active ? 'border-accent bg-accent-soft text-foreground' : 'border-border text-muted hover:text-foreground')}
+`;
+
+const Body = tw.div`
+  mt-4 flex-1
+`;
+
+const Caption = tw.figcaption`
+  mt-2 break-words font-mono text-xs text-faint
+`;
+
+const RefinedWith = tw.p`
+  mt-3 break-words font-mono text-xs text-faint
+`;
+
+const RefineSection = tw.div`
+  mt-6 border-t border-border pt-4
+`;
+
+const RefineRow = tw.div`
+  mt-2 flex gap-2
+`;
+
+const ErrorText = tw.p`
+  mt-2 text-sm text-danger
+`;

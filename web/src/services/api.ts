@@ -1,11 +1,11 @@
 import {
   campaignEventSchema,
-  getProjectResponseSchema,
+  getBrandResponseSchema,
   refineAssetResponseSchema,
   type Asset,
+  type Brand,
   type CampaignEvent,
   type CreateCampaignRequest,
-  type Project,
   type UpdateBrandRequest,
 } from '@media-content/shared';
 
@@ -17,20 +17,20 @@ async function ensureOk(res: Response): Promise<Response> {
   return res;
 }
 
-export async function fetchProject(): Promise<Project> {
-  const res = await ensureOk(await fetch('/api/projects'));
-  return getProjectResponseSchema.parse(await res.json()).project;
+export async function fetchBrand(): Promise<Brand> {
+  const res = await ensureOk(await fetch('/api/brand'));
+  return getBrandResponseSchema.parse(await res.json()).brand;
 }
 
-export async function updateBrand(projectId: string, brand: UpdateBrandRequest): Promise<Project> {
+export async function updateBrand(brand: UpdateBrandRequest): Promise<Brand> {
   const res = await ensureOk(
-    await fetch(`/api/projects/${projectId}/brand`, {
+    await fetch('/api/brand', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(brand),
     })
   );
-  return getProjectResponseSchema.parse(await res.json()).project;
+  return getBrandResponseSchema.parse(await res.json()).brand;
 }
 
 export async function createCampaign(

@@ -2,59 +2,56 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import tw from 'tailwind-styled-components';
 
 import { AuthControls } from '@/components/auth-controls';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { useProject } from '@/services/hooks';
+import { useBrand } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
 import { AssetDetail } from './asset-detail';
 import { AssetGrid } from './asset-grid';
+import { BrandSettings } from './brand-settings';
 import { Composer } from './composer';
-import { ProjectSettings } from './project-settings';
 
 export function StudioApp() {
-  const { project, setProject, error, isLoading } = useProject();
+  const { brand, setBrand, error, isLoading } = useBrand();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const storeError = useStudioStore(s => s.error);
   const clearError = useStudioStore(s => s.clearError);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex items-baseline gap-1 font-mono text-sm font-medium text-foreground">
+    <Shell>
+      <Header>
+        <HeaderInner>
+          <Wordmark href="/">
             media<span className="text-accent">.</span>content
-          </Link>
-          <span className="font-mono text-xs text-faint">/ studio</span>
-          {project && (
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              className="ml-auto min-w-0 truncate rounded-md px-2 py-1 font-mono text-xs text-muted transition-colors hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              project: {project.brand.name} <span className="hidden text-faint sm:inline">· edit brand</span>
-            </button>
+          </Wordmark>
+          <HeaderCrumb>/ studio</HeaderCrumb>
+          {brand && (
+            <BrandButton type="button" onClick={() => setSettingsOpen(true)}>
+              {brand.name} <EditHint>· edit brand</EditHint>
+            </BrandButton>
           )}
-          <ThemeToggle className={project ? '' : 'ml-auto'} />
+          <ThemeToggle className={brand ? '' : 'ml-auto'} />
           <AuthControls />
-        </div>
-      </header>
+        </HeaderInner>
+      </Header>
 
       {storeError && (
-        <div role="alert" className="border-b border-danger/40 bg-danger/10">
-          <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 text-sm text-danger sm:px-6">
+        <ErrorBanner role="alert">
+          <ErrorBannerInner>
             {storeError}
-            <button type="button" onClick={clearError} className="ml-auto font-mono text-xs underline">
+            <DismissButton type="button" onClick={clearError}>
               dismiss
-            </button>
-          </div>
-        </div>
+            </DismissButton>
+          </ErrorBannerInner>
+        </ErrorBanner>
       )}
 
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
-        <div className="lg:sticky lg:top-8 lg:self-start">
+      <Main>
+        <ComposerColumn>
           {isLoading && (
             <div className="space-y-4">
               <Skeleton className="h-28 w-full" />
@@ -63,24 +60,72 @@ export function StudioApp() {
             </div>
           )}
           {error && (
-            <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
-              Can&rsquo;t reach the wire. Start the server, then reload. ({error})
-            </div>
+            <LoadError role="alert">Can&rsquo;t reach the wire. Start the server, then reload. ({error})</LoadError>
           )}
-          {project && <Composer project={project} />}
-        </div>
+          {brand && <Composer brand={brand} />}
+        </ComposerColumn>
         <AssetGrid />
-      </main>
+      </Main>
 
       <AssetDetail />
-      {project && (
-        <ProjectSettings
-          project={project}
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          onSaved={setProject}
-        />
+      {brand && (
+        <BrandSettings brand={brand} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={setBrand} />
       )}
-    </div>
+    </Shell>
   );
 }
+
+const Shell = tw.div`
+  flex min-h-screen flex-col
+`;
+
+const Header = tw.header`
+  border-b border-border
+`;
+
+const HeaderInner = tw.div`
+  mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4 sm:px-6
+`;
+
+const Wordmark = tw(Link)`
+  flex shrink-0 items-baseline gap-1 font-mono text-sm font-medium text-foreground
+`;
+
+const HeaderCrumb = tw.span`
+  shrink-0 font-mono text-xs text-faint
+`;
+
+const BrandButton = tw.button`
+  ml-auto min-w-0 truncate rounded-md px-2 py-1 font-mono text-xs text-muted transition-colors
+  hover:bg-surface-raised hover:text-foreground
+  focus-visible:outline-2 focus-visible:outline-accent
+`;
+
+const EditHint = tw.span`
+  hidden text-faint sm:inline
+`;
+
+const ErrorBanner = tw.div`
+  border-b border-danger/40 bg-danger/10
+`;
+
+const ErrorBannerInner = tw.div`
+  mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 text-sm text-danger sm:px-6
+`;
+
+const DismissButton = tw.button`
+  ml-auto shrink-0 font-mono text-xs underline
+`;
+
+const Main = tw.main`
+  mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 sm:px-6
+  lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]
+`;
+
+const ComposerColumn = tw.div`
+  lg:sticky lg:top-8 lg:self-start
+`;
+
+const LoadError = tw.div`
+  rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger
+`;
