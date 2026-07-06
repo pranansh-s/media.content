@@ -110,7 +110,7 @@ export function createApp(options: AppOptions = {}) {
     const parsed = createBrandRequestSchema.safeParse(req.body);
     if (!parsed.success) return validationError(res, parsed.error);
     const brand = store.createBrand(parsed.data);
-    void ingestBrand(store, brand, embedder).catch(() => {});
+    void ingestBrand(store, brand, embedder).catch(err => console.warn('rag ingest failed', err));
     res.status(201).json({ brand });
   });
 
@@ -125,7 +125,7 @@ export function createApp(options: AppOptions = {}) {
     if (!parsed.success) return validationError(res, parsed.error);
     const brand = store.updateBrand(req.params.id, parsed.data);
     if (!brand) return res.status(404).json({ error: 'Brand not found' });
-    void ingestBrand(store, brand, embedder).catch(() => {});
+    void ingestBrand(store, brand, embedder).catch(err => console.warn('rag ingest failed', err));
     res.json({ brand });
   });
 
@@ -202,7 +202,7 @@ export function createApp(options: AppOptions = {}) {
                 );
                 store.updateAssetStatus(asset.id, 'complete');
                 completed = store.appendRevision(asset.id, { ...revisionBase(null, 'generated'), body });
-                void ingestRevision(store, brand.id, asset.channel, body, embedder).catch(() => {});
+                void ingestRevision(store, brand.id, asset.channel, body, embedder).catch(err => console.warn('rag ingest failed', err));
               } else {
                 const image = await withRetry(() =>
                   provider.generateImage({ channel: asset.channel, prompt, brand, signal }),
@@ -234,6 +234,9 @@ export function createApp(options: AppOptions = {}) {
     if (!parsed.success) return validationError(res, parsed.error);
     const context = store.getAssetContext(req.params.id);
     if (!context) return res.status(404).json({ error: 'Asset not found' });
+    if (context.asset.status !== 'complete') {
+      return res.status(409).json({ error: 'Asset is not ready to refine' });
+    }
 
     const { asset, campaign, brand } = context;
     const refinementPrompt = parsed.data.prompt;

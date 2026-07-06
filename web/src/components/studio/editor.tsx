@@ -14,11 +14,20 @@ function textToHtml(text: string): string {
     .join('');
 }
 
-export function TextEditor({ revisionId, body }: { revisionId: string; body: string }) {
+interface TextEditorProps {
+  revisionId: string;
+  body: string;
+  onTextChange?: (text: string) => void;
+}
+
+export function TextEditor({ revisionId, body, onTextChange }: TextEditorProps) {
   const editor = useEditor({
     extensions: [StarterKit],
     content: textToHtml(body),
     immediatelyRender: false,
+    onUpdate: ({ editor: instance }) => {
+      onTextChange?.(instance.getText({ blockSeparator: '\n' }));
+    },
     editorProps: {
       attributes: {
         class:
@@ -30,8 +39,10 @@ export function TextEditor({ revisionId, body }: { revisionId: string; body: str
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.commands.setContent(textToHtml(body));
+      onTextChange?.(body);
     }
-  }, [editor, revisionId, body]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, revisionId]);
 
   return <EditorContent editor={editor} />;
 }

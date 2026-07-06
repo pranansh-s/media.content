@@ -7,17 +7,19 @@ import tw from 'tailwind-styled-components';
 import { AuthControls } from '@/components/auth-controls';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { useBrand } from '@/services/hooks';
+import { useBrands } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
 import { AssetDetail } from './asset-detail';
 import { AssetGrid } from './asset-grid';
-import { BrandSettings } from './brand-settings';
+import { BrandSettings, type BrandSettingsMode } from './brand-settings';
+import { BrandSwitcher } from './brand-switcher';
+import { CampaignHistory } from './campaign-history';
 import { Composer } from './composer';
 
 export function StudioApp() {
-  const { brand, setBrand, error, isLoading } = useBrand();
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { brands, activeBrand, error, isLoading } = useBrands();
+  const [settings, setSettings] = useState<{ open: boolean; mode: BrandSettingsMode }>({ open: false, mode: 'edit' });
   const storeError = useStudioStore(s => s.error);
   const clearError = useStudioStore(s => s.clearError);
 
@@ -29,12 +31,13 @@ export function StudioApp() {
             media<span className="text-accent">.</span>content
           </Wordmark>
           <HeaderCrumb>/ studio</HeaderCrumb>
-          {brand && (
-            <BrandButton type="button" onClick={() => setSettingsOpen(true)}>
-              {brand.name} <EditHint>· edit brand</EditHint>
-            </BrandButton>
-          )}
-          <ThemeToggle className={brand ? '' : 'ml-auto'} />
+          <BrandSwitcher
+            brands={brands}
+            activeBrand={activeBrand}
+            onEdit={() => setSettings({ open: true, mode: 'edit' })}
+            onCreate={() => setSettings({ open: true, mode: 'create' })}
+          />
+          <ThemeToggle className={activeBrand ? '' : 'ml-auto'} />
           <AuthControls />
         </HeaderInner>
       </Header>
@@ -62,15 +65,23 @@ export function StudioApp() {
           {error && (
             <LoadError role="alert">Can&rsquo;t reach the wire. Start the server, then reload. ({error})</LoadError>
           )}
-          {brand && <Composer brand={brand} />}
+          {activeBrand && (
+            <>
+              <Composer brand={activeBrand} />
+              <CampaignHistory />
+            </>
+          )}
         </ComposerColumn>
         <AssetGrid />
       </Main>
 
       <AssetDetail />
-      {brand && (
-        <BrandSettings brand={brand} open={settingsOpen} onClose={() => setSettingsOpen(false)} onSaved={setBrand} />
-      )}
+      <BrandSettings
+        brand={activeBrand}
+        mode={settings.mode}
+        open={settings.open}
+        onClose={() => setSettings(current => ({ ...current, open: false }))}
+      />
     </Shell>
   );
 }
@@ -93,16 +104,6 @@ const Wordmark = tw(Link)`
 
 const HeaderCrumb = tw.span`
   shrink-0 font-mono text-xs text-faint
-`;
-
-const BrandButton = tw.button`
-  ml-auto min-w-0 truncate rounded-md px-2 py-1 font-mono text-xs text-muted transition-colors
-  hover:bg-surface-raised hover:text-foreground
-  focus-visible:outline-2 focus-visible:outline-accent
-`;
-
-const EditHint = tw.span`
-  hidden text-faint sm:inline
 `;
 
 const ErrorBanner = tw.div`

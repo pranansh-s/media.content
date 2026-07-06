@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tag } from '@/components/ui/tag';
 import { Wire } from '@/components/ui/wire';
 import { arriveOnWire } from '@/lib/motion';
+import { useRegenerateAsset } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
 function PendingLines() {
@@ -21,12 +22,12 @@ function PendingLines() {
   );
 }
 
-function AssetPreview({ asset }: { asset: Asset }) {
-  if (asset.status === 'failed') {
-    return <p className="text-sm text-danger">Generation failed. Put the brief on the wire again.</p>;
+function AssetPreview({ asset, isRetrying }: { asset: Asset; isRetrying: boolean }) {
+  if (asset.status === 'failed' && !isRetrying) {
+    return <p className="text-sm text-danger">Generation failed. Run this channel again.</p>;
   }
   const revision = asset.revisions.at(-1);
-  if (!revision) return <PendingLines />;
+  if (!revision || isRetrying) return <PendingLines />;
   if (asset.kind === 'image' && 'url' in revision) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -39,7 +40,14 @@ function AssetPreview({ asset }: { asset: Asset }) {
 function AssetCard({ asset }: { asset: Asset }) {
   const selectAsset = useStudioStore(s => s.selectAsset);
   const selected = useStudioStore(s => s.selectedAssetId === asset.id);
+  const { regenerate, isRegenerating } = useRegenerateAsset();
   const done = asset.status === 'complete';
+  const failed = asset.status === 'failed';
+
+  const onClick = () => {
+    if (done) selectAsset(asset.id);
+    else if (failed && !isRegenerating) void regenerate(asset.id);
+  };
 
   return (
     <Card
@@ -47,19 +55,22 @@ function AssetCard({ asset }: { asset: Asset }) {
       variants={arriveOnWire}
       initial="hidden"
       animate="visible"
-      onClick={() => done && selectAsset(asset.id)}
-      disabled={!done}
+      onClick={onClick}
+      disabled={!done && !failed}
       $selected={selected}
-      $done={done}
+      $clickable={done || failed}
     >
       <CardHeader>
         <Tag>{CHANNEL_TAGS[asset.channel]}</Tag>
         <ChannelName>{CHANNEL_LABELS[asset.channel]}</ChannelName>
-        <CardStatus>{asset.status === 'complete' ? `rev ${asset.revisions.length}` : asset.status}</CardStatus>
+        <CardStatus $failed={failed && !isRegenerating}>
+          {done ? `rev ${asset.revisions.length}` : isRegenerating ? 'retrying' : asset.status}
+        </CardStatus>
       </CardHeader>
-      {!done && asset.status !== 'failed' && <Wire />}
-      <AssetPreview asset={asset} />
+      {(isRegenerating || (!done && !failed)) && <Wire />}
+      <AssetPreview asset={asset} isRetrying={isRegenerating} />
       {done && <OpenHint>open to edit →</OpenHint>}
+      {failed && !isRegenerating && <RetryHint>run it again →</RetryHint>}
     </Card>
   );
 }
@@ -88,11 +99,11 @@ export function AssetGrid() {
   );
 }
 
-const Card = tw(motion.button)<{ $selected: boolean; $done: boolean }>`
+const Card = tw(motion.button)<{ $selected: boolean; $clickable: boolean }>`
   flex w-full min-w-0 flex-col gap-3 rounded-lg border bg-surface p-4 text-left transition-colors
   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
   ${p => (p.$selected ? 'border-accent' : 'border-border')}
-  ${p => (p.$done ? 'cursor-pointer hover:border-border-strong' : 'cursor-default')}
+  ${p => (p.$clickable ? 'cursor-pointer hover:border-border-strong' : 'cursor-default')}
 `;
 
 const CardHeader = tw.div`
@@ -103,8 +114,9 @@ const ChannelName = tw.span`
   min-w-0 truncate font-mono text-xs text-muted
 `;
 
-const CardStatus = tw.span`
-  ml-auto shrink-0 font-mono text-[10px] text-faint
+const CardStatus = tw.span<{ $failed: boolean }>`
+  ml-auto shrink-0 font-mono text-[10px]
+  ${p => (p.$failed ? 'text-danger' : 'text-faint')}
 `;
 
 const PreviewText = tw.p`
@@ -113,6 +125,10 @@ const PreviewText = tw.p`
 
 const OpenHint = tw.span`
   font-mono text-[10px] text-faint
+`;
+
+const RetryHint = tw.span`
+  font-mono text-[10px] text-danger
 `;
 
 const EmptyState = tw.div`

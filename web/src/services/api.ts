@@ -1,10 +1,16 @@
 import {
+  assetResponseSchema,
   campaignEventSchema,
   getBrandResponseSchema,
-  refineAssetResponseSchema,
+  getCampaignResponseSchema,
+  listBrandsResponseSchema,
+  listCampaignsResponseSchema,
   type Asset,
   type Brand,
+  type Campaign,
   type CampaignEvent,
+  type CampaignSummary,
+  type CreateBrandRequest,
   type CreateCampaignRequest,
   type UpdateBrandRequest,
 } from '@media-content/shared';
@@ -17,33 +23,48 @@ async function ensureOk(res: Response): Promise<Response> {
   return res;
 }
 
-export async function fetchBrand(): Promise<Brand> {
-  const res = await ensureOk(await fetch('/api/brand'));
+const jsonInit = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+
+export async function fetchBrands(): Promise<Brand[]> {
+  const res = await ensureOk(await fetch('/api/brands'));
+  return listBrandsResponseSchema.parse(await res.json()).brands;
+}
+
+export async function createBrand(brand: CreateBrandRequest): Promise<Brand> {
+  const res = await ensureOk(await fetch('/api/brands', jsonInit('POST', brand)));
   return getBrandResponseSchema.parse(await res.json()).brand;
 }
 
-export async function updateBrand(brand: UpdateBrandRequest): Promise<Brand> {
-  const res = await ensureOk(
-    await fetch('/api/brand', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(brand),
-    })
-  );
+export async function updateBrand(brandId: string, brand: UpdateBrandRequest): Promise<Brand> {
+  const res = await ensureOk(await fetch(`/api/brands/${brandId}`, jsonInit('PUT', brand)));
   return getBrandResponseSchema.parse(await res.json()).brand;
+}
+
+export async function deleteBrand(brandId: string): Promise<void> {
+  await ensureOk(await fetch(`/api/brands/${brandId}`, { method: 'DELETE' }));
+}
+
+export async function fetchCampaigns(brandId: string): Promise<CampaignSummary[]> {
+  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns`));
+  return listCampaignsResponseSchema.parse(await res.json()).campaigns;
+}
+
+export async function fetchCampaign(campaignId: string): Promise<Campaign> {
+  const res = await ensureOk(await fetch(`/api/campaigns/${campaignId}`));
+  return getCampaignResponseSchema.parse(await res.json()).campaign;
 }
 
 export async function createCampaign(
+  brandId: string,
   request: CreateCampaignRequest,
-  onEvent: (event: CampaignEvent) => void
+  onEvent: (event: CampaignEvent) => void,
+  signal?: AbortSignal
 ): Promise<void> {
-  const res = await ensureOk(
-    await fetch('/api/campaigns', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    })
-  );
+  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns`, { ...jsonInit('POST', request), signal }));
 
   const reader = res.body?.getReader();
   if (!reader) {
@@ -52,27 +73,41 @@ export async function createCampaign(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  const dispatch = (frame: string) => {
+    if (!frame.startsWith('data: ')) return;
+    const raw = frame.slice('data: '.length);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (cause) {
+      throw new Error(`Malformed SSE frame: ${(cause as Error).message}`);
+    }
+    onEvent(campaignEventSchema.parse(parsed));
+  };
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    const frames = buffer.split('\n\n');
+    const frames = buffer.split(/\r?\n\r?\n/);
     buffer = frames.pop() ?? '';
-    for (const frame of frames) {
-      if (frame.startsWith('data: ')) {
-        onEvent(campaignEventSchema.parse(JSON.parse(frame.slice('data: '.length))));
-      }
-    }
+    for (const frame of frames) dispatch(frame);
   }
+  if (buffer.trim()) dispatch(buffer);
 }
 
-export async function refineAsset(assetId: string, prompt: string): Promise<Asset> {
-  const res = await ensureOk(
-    await fetch(`/api/assets/${assetId}/refine`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    })
-  );
-  return refineAssetResponseSchema.parse(await res.json()).asset;
+async function assetRequest(url: string, init?: RequestInit): Promise<Asset> {
+  const res = await ensureOk(await fetch(url, init ?? { method: 'POST' }));
+  return assetResponseSchema.parse(await res.json()).asset;
+}
+
+export function refineAsset(assetId: string, prompt: string): Promise<Asset> {
+  return assetRequest(`/api/assets/${assetId}/refine`, jsonInit('POST', { prompt }));
+}
+
+export function regenerateAsset(assetId: string): Promise<Asset> {
+  return assetRequest(`/api/assets/${assetId}/regenerate`);
+}
+
+export function saveRevision(assetId: string, body: string): Promise<Asset> {
+  return assetRequest(`/api/assets/${assetId}/revisions`, jsonInit('POST', { body }));
 }

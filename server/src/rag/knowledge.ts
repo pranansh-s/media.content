@@ -80,7 +80,13 @@ export async function retrieve(
   if (!embedder) return [];
   const chunks = store.listChunks(brandId);
   if (chunks.length === 0) return [];
-  const [queryEmbedding] = await embedder([query]);
+  let queryEmbedding: Float32Array | undefined;
+  try {
+    [queryEmbedding] = await embedder([query]);
+  } catch {
+    return [];
+  }
+  if (!queryEmbedding) return [];
   return chunks
     .map(chunk => ({
       text: chunk.text,
