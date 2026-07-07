@@ -122,6 +122,71 @@ export function Channels() {
   );
 }
 
+const PERSONAS = [
+  {
+    role: 'Founder',
+    caption: 'Shipping v1 tonight, drafting the launch tweet at midnight.',
+  },
+  {
+    role: 'Engineer running the launch',
+    caption: 'Wrote the release notes, now needs a LinkedIn post and a banner.',
+  },
+  {
+    role: 'Two-person team',
+    caption: 'No comms desk, no PR retainer, still needs to sound like a company.',
+  },
+];
+
+export function Audience() {
+  return (
+    <section id="audience" className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
+      <div className="max-w-2xl">
+        <p className="font-mono text-xs uppercase tracking-widest text-accent">Made for</p>
+        <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          Small teams, big announcements
+        </h2>
+        <p className="mt-4 text-muted">
+          You don&rsquo;t have a comms desk. You have a launch tomorrow and a browser tab with a half-written tweet.
+          media.content is built for the people doing the work — founders, indie devs, tiny teams — who need to sound
+          like a real company without hiring one.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-6 md:grid-cols-3">
+        {PERSONAS.map(persona => (
+          <div key={persona.role} className="flex flex-col">
+            <div className="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed border-border bg-surface">
+              <span className="font-mono text-xs text-faint">[ infographic ]</span>
+            </div>
+            <h3 className="mt-4 font-display text-lg font-bold">{persona.role}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{persona.caption}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed border-border bg-surface p-6">
+          <span className="font-mono text-xs uppercase tracking-widest text-faint">[ before / after ]</span>
+        </div>
+        <div className="rounded-lg border border-border bg-surface p-5 font-mono text-xs leading-loose text-muted">
+          <p>
+            <span className="text-faint">reader:</span> founder shipping v1
+          </p>
+          <p>
+            <span className="text-faint">reader:</span> engineer running the launch
+          </p>
+          <p>
+            <span className="text-faint">reader:</span> two-person team, no comms desk
+          </p>
+          <p>
+            <span className="text-faint">made to:</span> <span className="text-accent">skip the press-kit ritual</span>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Voice() {
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center">
@@ -152,32 +217,12 @@ export function Voice() {
   );
 }
 
-export function Pricing() {
-  return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
-      <div className="mx-auto max-w-lg rounded-lg border border-border bg-surface p-8 text-center">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">Pricing</p>
-        <h2 className="mt-3 font-display text-3xl font-bold tracking-tight">Free while in beta</h2>
-        <p className="mt-3 text-sm text-muted">
-          Every channel, every style, no card. Paid plans arrive when the wire can carry your whole launch calendar.
-        </p>
-        <Link
-          href="/studio"
-          className="mt-6 inline-flex h-10 items-center rounded-md bg-accent px-5 font-sans text-sm font-bold text-accent-ink transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          Start writing
-        </Link>
-      </div>
-    </section>
-  );
-}
-
 export function Footer() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 font-mono text-xs text-faint sm:px-6">
         <span>
-          media<span className="text-accent">.</span>content — the newsroom you didn&rsquo;t hire
+          media.content — the newsroom you didn&rsquo;t hire
         </span>
         <span>© {new Date().getFullYear()}</span>
       </div>

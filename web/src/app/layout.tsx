@@ -37,8 +37,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${bricolage.variable} ${atkinson.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${atkinson.variable} ${plexMono.variable}`}
     >
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
       </body>

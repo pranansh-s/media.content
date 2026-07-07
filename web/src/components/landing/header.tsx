@@ -7,8 +7,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-baseline gap-1 font-mono text-sm font-medium text-foreground">
-          media<span className="text-accent">.</span>content
+        <Link href="/" className="flex items-baseline font-mono text-sm font-medium text-foreground">
+          media<span className="text-accent text-xl">.</span>content
         </Link>
         <nav className="hidden items-center gap-6 font-mono text-xs text-muted sm:flex">
           <a href="#channels" className="transition-colors hover:text-foreground">
@@ -17,8 +17,8 @@ export function Header() {
           <a href="#wire" className="transition-colors hover:text-foreground">
             how it works
           </a>
-          <a href="#pricing" className="transition-colors hover:text-foreground">
-            pricing
+          <a href="#audience" className="transition-colors hover:text-foreground">
+            made for
           </a>
         </nav>
         <div className="flex items-center gap-3">

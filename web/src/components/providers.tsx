@@ -8,7 +8,7 @@ import { clerkEnabled } from '@/lib/auth';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const inner = (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </ThemeProvider>
   );
