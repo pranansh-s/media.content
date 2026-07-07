@@ -8,23 +8,7 @@
 
 AI media-outreach studio for startups without a media department. One brief plans and generates a full multi-channel campaign — tweets, LinkedIn posts, Reddit threads, GitHub release notes, Dev.to and Medium articles, banners, social images — streamed per asset over SSE and refinable through follow-up prompts. Every campaign is anchored to a **Brand** and grounded in its references via a RAG pipeline so voice and facts stay consistent across channels.
 
-## Architecture
-
-```mermaid
-graph TD
-    A[Next.js 16 Studio] -->|REST + SSE| B(Express 5 API)
-    A -->|Clerk Auth| G[Clerk]
-    B -->|Zod contract| S[shared/ schemas]
-    B -->|CRUD| D[(SQLite)]
-    B -->|1 Plan| P[Planner]
-    P -->|2 Retrieve| R[RAG]
-    R -->|reads| D
-    R -->|fetch URLs| U[URL Fetcher]
-    P -->|3 Generate| C{ContentProvider}
-    C -->|key set| GEM[GeminiProvider]
-    C -->|no key| FIX[FixtureProvider]
-    B -->|SSE per asset| A
-```
+## How it works
 
 A brief hits `POST /api/brands/:id/campaigns`. The **planner** drafts a channel-aware campaign plan (angle, hooks, per-asset briefs). Each asset then runs through a **RAG retrieval** step — brand references, prior revisions, and URLs cited in the brief are chunked, embedded with `gemini-embedding-001`, and ranked by cosine similarity — before generation. Assets fan out through a bounded-concurrency queue into the active `ContentProvider` and stream back to the studio over Server-Sent Events. Everything persists in SQLite so revisions, refinements, and campaign history survive restarts.
 
