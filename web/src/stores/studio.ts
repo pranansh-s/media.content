@@ -1,5 +1,6 @@
-import type { Asset, Brand, Campaign, CampaignSummary } from '@media-content/shared';
 import { create } from 'zustand';
+
+import type { Asset, Brand, Campaign, CampaignSummary } from '@media-content/shared';
 
 interface StudioState {
   brands: Brand[];

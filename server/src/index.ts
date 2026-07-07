@@ -1,7 +1,7 @@
 import { SHARED_VERSION } from '@media-content/shared';
 
 import { createApp } from './app';
-import { openDatabase, DEFAULT_DB_PATH } from './db/database';
+import { DEFAULT_DB_PATH, openDatabase } from './db/database';
 import { createImageStore } from './images';
 import { createProviderFromEnv, isGeminiEnabled } from './providers';
 

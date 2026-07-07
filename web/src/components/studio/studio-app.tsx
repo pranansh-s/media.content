@@ -1,18 +1,22 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
+import Link from 'next/link';
+
 import tw from 'tailwind-styled-components';
 
 import { AuthControls } from '@/components/auth-controls';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+
 import { useBrands } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
+import type { BrandSettingsMode } from './brand-settings';
+
 import { AssetDetail } from './asset-detail';
 import { AssetGrid } from './asset-grid';
-import { BrandSettings, type BrandSettingsMode } from './brand-settings';
+import { BrandSettings } from './brand-settings';
 import { BrandSwitcher } from './brand-switcher';
 import { CampaignHistory } from './campaign-history';
 import { Composer } from './composer';
@@ -87,46 +91,99 @@ export function StudioApp() {
 }
 
 const Shell = tw.div`
-  flex min-h-screen flex-col
+  flex
+  min-h-screen
+  flex-col
 `;
 
 const Header = tw.header`
-  border-b border-border
+  border-border
+  border-b
 `;
 
 const HeaderInner = tw.div`
-  mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4 sm:px-6
+  mx-auto
+  flex
+  h-14
+  w-full
+  max-w-7xl
+  items-center
+  gap-4
+  px-4
+  sm:px-6
 `;
 
 const Wordmark = tw(Link)`
-  flex shrink-0 items-baseline gap-1 font-mono text-sm font-medium text-foreground
+  text-foreground
+  flex
+  shrink-0
+  items-baseline
+  gap-1
+  font-mono
+  text-sm
+  font-medium
 `;
 
 const HeaderCrumb = tw.span`
-  shrink-0 font-mono text-xs text-faint
+  text-faint
+  shrink-0
+  font-mono
+  text-xs
 `;
 
 const ErrorBanner = tw.div`
-  border-b border-danger/40 bg-danger/10
+  border-danger/40
+  bg-danger/10
+  border-b
 `;
 
 const ErrorBannerInner = tw.div`
-  mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 text-sm text-danger sm:px-6
+  text-danger
+  mx-auto
+  flex
+  w-full
+  max-w-7xl
+  items-center
+  gap-3
+  px-4
+  py-2
+  text-sm
+  sm:px-6
 `;
 
 const DismissButton = tw.button`
-  ml-auto shrink-0 font-mono text-xs underline
+  ml-auto
+  shrink-0
+  font-mono
+  text-xs
+  underline
 `;
 
 const Main = tw.main`
-  mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 sm:px-6
+  mx-auto
+  grid
+  w-full
+  max-w-7xl
+  flex-1
+  gap-8
+  px-4
+  py-8
+  sm:px-6
   lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]
 `;
 
 const ComposerColumn = tw.div`
-  lg:sticky lg:top-8 lg:self-start
+  lg:sticky
+  lg:top-8
+  lg:self-start
 `;
 
 const LoadError = tw.div`
-  rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger
+  border-danger/40
+  bg-danger/10
+  text-danger
+  rounded-lg
+  border
+  p-4
+  text-sm
 `;

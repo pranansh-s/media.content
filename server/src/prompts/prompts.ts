@@ -1,6 +1,5 @@
-import type { Brand, CampaignPlan, GeneratableChannel, TextChannel } from '@media-content/shared';
-
 import type { ImageSpec, TextSpec } from '../providers/content-provider';
+import type { Brand, CampaignPlan, GeneratableChannel, TextChannel } from '@media-content/shared';
 
 const CHANNEL_GUIDANCE: Record<TextChannel, string> = {
   tweet: [

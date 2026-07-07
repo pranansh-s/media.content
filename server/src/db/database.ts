@@ -1,6 +1,7 @@
-import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+import Database from 'better-sqlite3';
 
 export const DEFAULT_DB_PATH = join(process.cwd(), 'data', 'media-content.db');
 

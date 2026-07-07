@@ -1,8 +1,10 @@
 import { google } from '@ai-sdk/google';
-import { generateImage, generateText, NoImageGeneratedError, type ImageModel, type LanguageModel } from 'ai';
+import { generateImage, generateText, NoImageGeneratedError } from 'ai';
+
+import type { ContentProvider, GeneratedImage, ImageSpec, TextSpec } from './content-provider';
+import type { ImageModel, LanguageModel } from 'ai';
 
 import { buildImagePrompt, buildTextPrompt } from '../prompts/prompts';
-import type { ContentProvider, GeneratedImage, ImageSpec, TextSpec } from './content-provider';
 
 interface GeminiProviderOptions {
   saveImage: (bytes: Uint8Array, mediaType: string) => Promise<string>;

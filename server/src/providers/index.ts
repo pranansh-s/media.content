@@ -1,5 +1,5 @@
-import type { ImageSpec } from './content-provider';
-import type { ContentProvider } from './content-provider';
+import type { ContentProvider, ImageSpec } from './content-provider';
+
 import { FixtureProvider } from './fixture-provider';
 import { GeminiProvider } from './gemini-provider';
 

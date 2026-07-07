@@ -1,21 +1,25 @@
 'use client';
 
+import { useState } from 'react';
+
+import tw from 'tailwind-styled-components';
+
 import {
   BRAND_NAME_MAX_LENGTH,
   REFERENCES_MAX_LENGTH,
   TAGLINE_MAX_LENGTH,
   WRITING_STYLE_MAX_LENGTH,
-  type Brand,
 } from '@media-content/shared';
-import { useState } from 'react';
-import tw from 'tailwind-styled-components';
 
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose } from '@/components/ui/drawer';
 import { Input, Textarea } from '@/components/ui/input';
 import { FieldLabel } from '@/components/ui/label';
+
 import { createBrand, deleteBrand, updateBrand } from '@/services/api';
 import { useStudioStore } from '@/stores/studio';
+
+import type { Brand } from '@media-content/shared';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -175,32 +179,54 @@ function BrandForm({ brand, mode, onClose }: Omit<BrandSettingsProps, 'open'>) {
 }
 
 const TitleRow = tw.div`
-  flex items-center gap-2
+  flex
+  items-center
+  gap-2
 `;
 
 const Title = tw.h2`
-  font-display text-lg font-bold
+  font-display
+  text-lg
+  font-bold
 `;
 
 const Subtitle = tw.span`
-  font-mono text-xs text-faint
+  text-faint
+  font-mono
+  text-xs
 `;
 
 const HelpText = tw.p`
-  font-mono text-[11px] leading-relaxed text-faint
+  text-faint
+  font-mono
+  text-[11px]
+  leading-relaxed
 `;
 
 const SaveSection = tw.div`
-  mt-auto border-t border-border pt-4
+  border-border
+  mt-auto
+  border-t
+  pt-4
 `;
 
 const DeleteButton = tw.button`
-  mt-3 w-full text-center font-mono text-xs text-danger/80 transition-colors
+  text-danger/80
   hover:text-danger
-  disabled:cursor-default disabled:text-faint
-  focus-visible:outline-2 focus-visible:outline-danger
+  disabled:text-faint
+  focus-visible:outline-danger
+  mt-3
+  w-full
+  text-center
+  font-mono
+  text-xs
+  transition-colors
+  focus-visible:outline-2
+  disabled:cursor-default
 `;
 
 const ErrorText = tw.p`
-  mt-2 text-sm text-danger
+  text-danger
+  mt-2
+  text-sm
 `;

@@ -1,6 +1,10 @@
 import { google } from '@ai-sdk/google';
-import { campaignPlanSchema, type Brand, type CampaignPlan, type GeneratableChannel } from '@media-content/shared';
-import { generateObject, type LanguageModel } from 'ai';
+import { generateObject } from 'ai';
+
+import { campaignPlanSchema } from '@media-content/shared';
+
+import type { Brand, CampaignPlan, GeneratableChannel } from '@media-content/shared';
+import type { LanguageModel } from 'ai';
 
 import { buildPlanPrompt } from '../prompts/prompts';
 

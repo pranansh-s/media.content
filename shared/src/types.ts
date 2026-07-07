@@ -1,5 +1,3 @@
-import type { z } from 'zod';
-
 import type {
   apiErrorSchema,
   assetResponseSchema,
@@ -31,6 +29,7 @@ import type {
   updateBrandRequestSchema,
   videoChannelSchema,
 } from './schemas';
+import type { z } from 'zod';
 
 export type TextChannel = z.infer<typeof textChannelSchema>;
 export type ImageChannel = z.infer<typeof imageChannelSchema>;

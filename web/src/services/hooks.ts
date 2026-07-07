@@ -1,9 +1,10 @@
 'use client';
 
-import type { Asset, CreateCampaignRequest } from '@media-content/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useStudioStore } from '@/stores/studio';
+
+import type { Asset, CreateCampaignRequest } from '@media-content/shared';
 
 import {
   createCampaign,

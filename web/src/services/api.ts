@@ -5,14 +5,17 @@ import {
   getCampaignResponseSchema,
   listBrandsResponseSchema,
   listCampaignsResponseSchema,
-  type Asset,
-  type Brand,
-  type Campaign,
-  type CampaignEvent,
-  type CampaignSummary,
-  type CreateBrandRequest,
-  type CreateCampaignRequest,
-  type UpdateBrandRequest,
+} from '@media-content/shared';
+
+import type {
+  Asset,
+  Brand,
+  Campaign,
+  CampaignEvent,
+  CampaignSummary,
+  CreateBrandRequest,
+  CreateCampaignRequest,
+  UpdateBrandRequest,
 } from '@media-content/shared';
 
 async function ensureOk(res: Response): Promise<Response> {

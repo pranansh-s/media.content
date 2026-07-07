@@ -2,11 +2,13 @@
 
 import tw from 'tailwind-styled-components';
 
-import { CHANNEL_TAGS } from '@/constants/channels';
 import { Input } from '@/components/ui/input';
 import { Tag } from '@/components/ui/tag';
+
 import { useCampaignHistory } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
+
+import { CHANNEL_TAGS } from '@/constants/channels';
 
 function timestamp(iso: string): string {
   const date = new Date(iso);
@@ -78,11 +80,18 @@ export function CampaignHistory() {
 }
 
 const Section = tw.section`
-  mt-8 border-t border-border pt-5
+  border-border
+  mt-8
+  border-t
+  pt-5
 `;
 
 const Heading = tw.p`
-  font-mono text-[10px] uppercase tracking-widest text-faint
+  text-faint
+  font-mono
+  text-[10px]
+  tracking-widest
+  uppercase
 `;
 
 const SearchRow = tw.div`
@@ -90,38 +99,72 @@ const SearchRow = tw.div`
 `;
 
 const List = tw.ul`
-  mt-3 flex max-h-80 flex-col gap-2 overflow-y-auto pr-1
+  mt-3
+  flex
+  max-h-80
+  flex-col
+  gap-2
+  overflow-y-auto
+  pr-1
 `;
 
 const Item = tw.button<{ $active: boolean }>`
-  flex w-full flex-col gap-1.5 rounded-lg border p-3 text-left transition-colors
-  focus-visible:outline-2 focus-visible:outline-accent
-  disabled:cursor-default disabled:opacity-60
-  ${p => (p.$active ? 'border-accent bg-accent-soft/40' : 'border-border hover:border-border-strong')}
-`;
+  focus-visible:outline-accent
+  flex
+  w-full
+  flex-col
+  gap-1.5
+  rounded-lg
+  border
+  p-3
+  text-left
+  transition-colors
+  focus-visible:outline-2
+  disabled:cursor-default
+  disabled:opacity-60
+  ${p => (p.$active ? 'border-accent bg-accent-soft/40' : 'border-border hover:border-border-strong')} `;
 
 const ItemTop = tw.div`
-  flex w-full items-center gap-2
+  flex
+  w-full
+  items-center
+  gap-2
 `;
 
 const Timestamp = tw.span`
-  font-mono text-[10px] text-faint
+  text-faint
+  font-mono
+  text-[10px]
 `;
 
 const Status = tw.span<{ $failed: boolean }>`
-  ml-auto font-mono text-[10px] uppercase
-  ${p => (p.$failed ? 'text-danger' : 'text-faint')}
-`;
+  ml-auto
+  font-mono
+  text-[10px]
+  uppercase
+  ${p => (p.$failed ? 'text-danger' : 'text-faint')} `;
 
 const DeleteButton = tw.span`
-  cursor-pointer font-mono text-[10px] text-muted underline decoration-dotted underline-offset-2
+  text-muted
   hover:text-danger
+  cursor-pointer
+  font-mono
+  text-[10px]
+  underline
+  decoration-dotted
+  underline-offset-2
 `;
 
 const Prompt = tw.span`
-  line-clamp-2 w-full break-words text-sm text-muted
+  text-muted
+  line-clamp-2
+  w-full
+  text-sm
+  break-words
 `;
 
 const TagRow = tw.div`
-  flex flex-wrap gap-1
+  flex
+  flex-wrap
+  gap-1
 `;

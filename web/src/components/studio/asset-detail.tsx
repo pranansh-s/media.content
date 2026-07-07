@@ -1,19 +1,23 @@
 'use client';
 
-import { REFINE_PROMPT_MAX_LENGTH } from '@media-content/shared';
-import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
+
 import tw from 'tailwind-styled-components';
 
-import { CHANNEL_LABELS, CHANNEL_TAGS } from '@/constants/channels';
+import { REFINE_PROMPT_MAX_LENGTH } from '@media-content/shared';
+
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerClose } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { FieldLabel } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag } from '@/components/ui/tag';
+
 import { useRefineAsset, useRegenerateAsset, useRestoreRevision, useSaveRevision } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
+
+import { CHANNEL_LABELS, CHANNEL_TAGS } from '@/constants/channels';
 
 const TextEditor = dynamic(() => import('./editor').then(m => m.TextEditor), {
   ssr: false,
@@ -114,7 +118,7 @@ export function AssetDetail() {
               'url' in revision && (
                 <figure>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={revision.url} alt={revision.alt} className="w-full rounded-lg border border-border" />
+                  <img src={revision.url} alt={revision.alt} className="border-border w-full rounded-lg border" />
                   <Caption>{revision.alt}</Caption>
                 </figure>
               )
@@ -177,56 +181,90 @@ export function AssetDetail() {
 }
 
 const TitleRow = tw.div`
-  flex items-center gap-2
+  flex
+  items-center
+  gap-2
 `;
 
 const Title = tw.h2`
-  font-display text-lg font-bold
+  font-display
+  text-lg
+  font-bold
 `;
 
 const RevisionRow = tw.div`
-  mt-4 flex flex-wrap gap-1.5
+  mt-4
+  flex
+  flex-wrap
+  gap-1.5
 `;
 
 const RevisionPill = tw.button<{ $active: boolean }>`
-  rounded border px-2 py-0.5 font-mono text-[11px] transition-colors
-  focus-visible:outline-2 focus-visible:outline-accent
-  ${p => (p.$active ? 'border-accent bg-accent-soft text-foreground' : 'border-border text-muted hover:text-foreground')}
-`;
+  focus-visible:outline-accent
+  rounded
+  border
+  px-2
+  py-0.5
+  font-mono
+  text-[11px]
+  transition-colors
+  focus-visible:outline-2
+  ${p => (p.$active ? 'border-accent bg-accent-soft text-foreground' : 'border-border text-muted hover:text-foreground')} `;
 
 const SourceHint = tw.span`
   text-faint
 `;
 
 const Body = tw.div`
-  mt-4 flex-1
+  mt-4
+  flex-1
 `;
 
 const Caption = tw.figcaption`
-  mt-2 break-words font-mono text-xs text-faint
+  text-faint
+  mt-2
+  font-mono
+  text-xs
+  break-words
 `;
 
 const RefinedWith = tw.p`
-  mt-3 break-words font-mono text-xs text-faint
+  text-faint
+  mt-3
+  font-mono
+  text-xs
+  break-words
 `;
 
 const DraftRow = tw.div`
-  mt-2 flex justify-end
+  mt-2
+  flex
+  justify-end
 `;
 
 const SaveButton = tw.button`
-  font-mono text-[11px] text-accent transition-colors
+  text-accent
   hover:text-accent-strong
-  disabled:cursor-default disabled:text-faint
-  focus-visible:outline-2 focus-visible:outline-accent
+  disabled:text-faint
+  focus-visible:outline-accent
+  font-mono
+  text-[11px]
+  transition-colors
+  focus-visible:outline-2
+  disabled:cursor-default
 `;
 
 const RefineSection = tw.div`
-  mt-6 border-t border-border pt-4
+  border-border
+  mt-6
+  border-t
+  pt-4
 `;
 
 const RefineRow = tw.div`
-  mt-2 flex gap-2
+  mt-2
+  flex
+  gap-2
 `;
 
 const RegenerateRow = tw.div`
@@ -234,12 +272,22 @@ const RegenerateRow = tw.div`
 `;
 
 const RegenerateButton = tw.button`
-  font-mono text-xs text-muted underline decoration-dotted underline-offset-4 transition-colors
+  text-muted
   hover:text-foreground
-  disabled:cursor-default disabled:text-faint
-  focus-visible:outline-2 focus-visible:outline-accent
+  disabled:text-faint
+  focus-visible:outline-accent
+  font-mono
+  text-xs
+  underline
+  decoration-dotted
+  underline-offset-4
+  transition-colors
+  focus-visible:outline-2
+  disabled:cursor-default
 `;
 
 const ErrorText = tw.p`
-  mt-2 text-sm text-danger
+  text-danger
+  mt-2
+  text-sm
 `;

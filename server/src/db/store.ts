@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type {
   Asset,
   AssetStatus,
@@ -16,7 +18,6 @@ import type {
   UpdateBrandRequest,
 } from '@media-content/shared';
 import type { Database } from 'better-sqlite3';
-import { randomUUID } from 'node:crypto';
 
 import { DEFAULT_BRAND } from '../fixtures/brand';
 

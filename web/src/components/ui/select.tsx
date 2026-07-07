@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+
 import tw from 'tailwind-styled-components';
 
 export interface SelectOption {
@@ -114,33 +115,71 @@ const Root = tw.div`
 `;
 
 const Trigger = tw.button`
-  flex min-h-10 w-full items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-left text-sm text-foreground
-  focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent
+  border-border
+  bg-surface
+  text-foreground
+  focus-visible:outline-accent
+  flex
+  min-h-10
+  w-full
+  items-center
+  gap-2
+  rounded-md
+  border
+  px-3
+  py-2
+  text-left
+  text-sm
+  focus-visible:outline-2
+  focus-visible:outline-offset-1
 `;
 
 const TriggerText = tw.span`
-  min-w-0 flex-1 break-words
+  min-w-0
+  flex-1
+  break-words
 `;
 
 const Caret = tw.span<{ $open: boolean }>`
-  shrink-0 text-xs text-faint transition-transform
-  ${p => (p.$open ? 'rotate-180' : '')}
-`;
+  text-faint
+  shrink-0
+  text-xs
+  transition-transform
+  ${p => (p.$open ? 'rotate-180' : '')} `;
 
 const Listbox = tw.ul`
-  absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-lg
+  border-border
+  bg-surface
+  absolute
+  z-20
+  mt-1
+  max-h-72
+  w-full
+  overflow-y-auto
+  rounded-md
+  border
+  p-1
+  shadow-lg
 `;
 
 const Option = tw.li<{ $active: boolean }>`
-  cursor-pointer rounded px-2 py-1.5
-  ${p => (p.$active ? 'bg-surface-raised' : '')}
-`;
+  cursor-pointer
+  rounded
+  px-2
+  py-1.5
+  ${p => (p.$active ? 'bg-surface-raised' : '')} `;
 
 const OptionLabel = tw.span<{ $selected: boolean }>`
-  block break-words text-sm
-  ${p => (p.$selected ? 'text-accent' : 'text-foreground')}
-`;
+  block
+  text-sm
+  break-words
+  ${p => (p.$selected ? 'text-accent' : 'text-foreground')} `;
 
 const OptionDescription = tw.span`
-  mt-0.5 block break-words text-xs leading-snug text-muted
+  text-muted
+  mt-0.5
+  block
+  text-xs
+  leading-snug
+  break-words
 `;

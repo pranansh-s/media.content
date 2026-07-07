@@ -1,16 +1,18 @@
 'use client';
 
-import type { Asset } from '@media-content/shared';
 import { motion } from 'framer-motion';
 import tw from 'tailwind-styled-components';
 
-import { CHANNEL_LABELS, CHANNEL_TAGS } from '@/constants/channels';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag } from '@/components/ui/tag';
 import { Wire } from '@/components/ui/wire';
+
 import { arriveOnWire } from '@/lib/motion';
 import { useRegenerateAsset } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
+
+import { CHANNEL_LABELS, CHANNEL_TAGS } from '@/constants/channels';
+import type { Asset } from '@media-content/shared';
 
 function PendingLines() {
   return (
@@ -24,7 +26,7 @@ function PendingLines() {
 
 function AssetPreview({ asset, isRetrying }: { asset: Asset; isRetrying: boolean }) {
   if (asset.status === 'failed' && !isRetrying) {
-    return <p className="text-sm text-danger">Generation failed. Run this channel again.</p>;
+    return <p className="text-danger text-sm">Generation failed. Run this channel again.</p>;
   }
   const revision = asset.revisions.at(-1);
   if (!revision || isRetrying) return <PendingLines />;
@@ -100,53 +102,107 @@ export function AssetGrid() {
 }
 
 const Card = tw(motion.button)<{ $selected: boolean; $clickable: boolean }>`
-  flex w-full min-w-0 flex-col gap-3 rounded-lg border bg-surface p-4 text-left transition-colors
-  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent
+  bg-surface
+  focus-visible:outline-accent
+  flex
+  w-full
+  min-w-0
+  flex-col
+  gap-3
+  rounded-lg
+  border
+  p-4
+  text-left
+  transition-colors
+  focus-visible:outline-2
+  focus-visible:outline-offset-2
   ${p => (p.$selected ? 'border-accent' : 'border-border')}
-  ${p => (p.$clickable ? 'cursor-pointer hover:border-border-strong' : 'cursor-default')}
-`;
+  ${p => (p.$clickable ? 'cursor-pointer hover:border-border-strong' : 'cursor-default')} `;
 
 const CardHeader = tw.div`
-  flex w-full items-center gap-2
+  flex
+  w-full
+  items-center
+  gap-2
 `;
 
 const ChannelName = tw.span`
-  min-w-0 truncate font-mono text-xs text-muted
+  text-muted
+  min-w-0
+  truncate
+  font-mono
+  text-xs
 `;
 
 const CardStatus = tw.span<{ $failed: boolean }>`
-  ml-auto shrink-0 font-mono text-[10px]
-  ${p => (p.$failed ? 'text-danger' : 'text-faint')}
-`;
+  ml-auto
+  shrink-0
+  font-mono
+  text-[10px]
+  ${p => (p.$failed ? 'text-danger' : 'text-faint')} `;
 
 const PreviewText = tw.p`
-  line-clamp-3 w-full whitespace-pre-line break-words text-sm text-muted
+  text-muted
+  line-clamp-3
+  w-full
+  text-sm
+  break-words
+  whitespace-pre-line
 `;
 
 const OpenHint = tw.span`
-  font-mono text-[10px] text-faint
+  text-faint
+  font-mono
+  text-[10px]
 `;
 
 const RetryHint = tw.span`
-  font-mono text-[10px] text-danger
+  text-danger
+  font-mono
+  text-[10px]
 `;
 
 const EmptyState = tw.div`
-  flex h-full min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border p-8 text-center
+  border-border
+  flex
+  h-full
+  min-h-64
+  flex-col
+  items-center
+  justify-center
+  rounded-lg
+  border
+  border-dashed
+  p-8
+  text-center
 `;
 
 const EmptyTitle = tw.p`
-  font-mono text-xs uppercase tracking-widest text-faint
+  text-faint
+  font-mono
+  text-xs
+  tracking-widest
+  uppercase
 `;
 
 const EmptyBody = tw.p`
-  mt-2 max-w-sm text-sm text-muted
+  text-muted
+  mt-2
+  max-w-sm
+  text-sm
 `;
 
 const StatusRow = tw.p`
-  pb-4 text-right font-mono text-[10px] uppercase text-faint
+  text-faint
+  pb-4
+  text-right
+  font-mono
+  text-[10px]
+  uppercase
 `;
 
 const Grid = tw.div`
-  grid gap-4 sm:grid-cols-2
+  grid
+  gap-4
+  sm:grid-cols-2
 `;

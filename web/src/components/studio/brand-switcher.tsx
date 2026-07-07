@@ -1,10 +1,12 @@
 'use client';
 
-import type { Brand } from '@media-content/shared';
 import { useEffect, useRef, useState } from 'react';
+
 import tw from 'tailwind-styled-components';
 
 import { useStudioStore } from '@/stores/studio';
+
+import type { Brand } from '@media-content/shared';
 
 interface BrandSwitcherProps {
   brands: Brand[];
@@ -93,51 +95,104 @@ export function BrandSwitcher({ brands, activeBrand, onEdit, onCreate }: BrandSw
 }
 
 const Root = tw.div`
-  relative ml-auto min-w-0
+  relative
+  ml-auto
+  min-w-0
 `;
 
 const Trigger = tw.button`
-  flex max-w-56 items-center gap-1.5 rounded-md px-2 py-1 font-mono text-xs text-muted transition-colors
-  hover:bg-surface-raised hover:text-foreground
-  focus-visible:outline-2 focus-visible:outline-accent
+  text-muted
+  hover:bg-surface-raised
+  hover:text-foreground
+  focus-visible:outline-accent
+  flex
+  max-w-56
+  items-center
+  gap-1.5
+  rounded-md
+  px-2
+  py-1
+  font-mono
+  text-xs
+  transition-colors
+  focus-visible:outline-2
 `;
 
 const TriggerName = tw.span`
-  min-w-0 truncate
+  min-w-0
+  truncate
 `;
 
 const Caret = tw.span<{ $open: boolean }>`
-  shrink-0 text-[10px] text-faint transition-transform
-  ${p => (p.$open ? 'rotate-180' : '')}
-`;
+  text-faint
+  shrink-0
+  text-[10px]
+  transition-transform
+  ${p => (p.$open ? 'rotate-180' : '')} `;
 
 const Menu = tw.div`
-  absolute right-0 z-30 mt-1 flex w-64 flex-col rounded-md border border-border bg-surface p-1 shadow-lg
+  border-border
+  bg-surface
+  absolute
+  right-0
+  z-30
+  mt-1
+  flex
+  w-64
+  flex-col
+  rounded-md
+  border
+  p-1
+  shadow-lg
 `;
 
 const MenuHeading = tw.p`
-  px-2 pb-1 pt-1.5 font-mono text-[10px] uppercase tracking-widest text-faint
+  text-faint
+  px-2
+  pt-1.5
+  pb-1
+  font-mono
+  text-[10px]
+  tracking-widest
+  uppercase
 `;
 
 const MenuItem = tw.button<{ $active: boolean }>`
-  w-full rounded px-2 py-1.5 text-left transition-colors
   hover:bg-surface-raised
-  focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent
-  ${p => (p.$active ? 'bg-surface-raised' : '')}
-`;
+  focus-visible:outline-accent
+  w-full
+  rounded
+  px-2
+  py-1.5
+  text-left
+  transition-colors
+  focus-visible:outline-2
+  focus-visible:-outline-offset-2
+  ${p => (p.$active ? 'bg-surface-raised' : '')} `;
 
 const ItemName = tw.span`
-  block truncate text-sm text-foreground
+  text-foreground
+  block
+  truncate
+  text-sm
 `;
 
 const ItemTagline = tw.span`
-  block truncate text-xs text-faint
+  text-faint
+  block
+  truncate
+  text-xs
 `;
 
 const ItemAction = tw.span`
-  block font-mono text-xs text-accent
+  text-accent
+  block
+  font-mono
+  text-xs
 `;
 
 const Divider = tw.div`
-  my-1 border-t border-border
+  border-border
+  my-1
+  border-t
 `;

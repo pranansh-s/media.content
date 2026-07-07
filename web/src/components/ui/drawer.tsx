@@ -1,7 +1,8 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
 import tw from 'tailwind-styled-components';
 
 interface DrawerProps {
@@ -53,15 +54,39 @@ export function DrawerClose({ onClose, label }: { onClose: () => void; label: st
 }
 
 const Overlay = tw(motion.div)`
-  fixed inset-0 z-30 bg-background/60 backdrop-blur-sm
+  bg-background/60
+  fixed
+  inset-0
+  z-30
+  backdrop-blur-sm
 `;
 
 const Panel = tw(motion.aside)`
-  fixed inset-y-0 right-0 z-40 flex w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-background p-6
+  border-border
+  bg-background
+  fixed
+  inset-y-0
+  right-0
+  z-40
+  flex
+  w-full
+  max-w-xl
+  flex-col
+  overflow-y-auto
+  border-l
+  p-6
 `;
 
 const CloseButton = tw.button`
-  ml-auto rounded-md px-2 py-1 font-mono text-xs text-muted
-  hover:bg-surface-raised hover:text-foreground
-  focus-visible:outline-2 focus-visible:outline-accent
+  text-muted
+  hover:bg-surface-raised
+  hover:text-foreground
+  focus-visible:outline-accent
+  ml-auto
+  rounded-md
+  px-2
+  py-1
+  font-mono
+  text-xs
+  focus-visible:outline-2
 `;

@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
 import { Atkinson_Hyperlegible, Bricolage_Grotesque, IBM_Plex_Mono } from 'next/font/google';
 
 import { Providers } from '@/components/providers';
+
+import type { Metadata } from 'next';
 
 import './globals.css';
 

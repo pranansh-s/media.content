@@ -1,26 +1,29 @@
 'use client';
 
+import { useState } from 'react';
+
+import tw from 'tailwind-styled-components';
+
 import {
   CUSTOM_STYLE_MAX_LENGTH,
   GENERATABLE_CHANNELS,
   PRESET_STYLES,
   PROMPT_MAX_LENGTH,
   VIDEO_CHANNELS,
-  type Brand,
-  type GeneratableChannel,
-  type StyleId,
 } from '@media-content/shared';
-import { useState } from 'react';
-import tw from 'tailwind-styled-components';
 
-import { CHANNEL_LABELS } from '@/constants/channels';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Textarea } from '@/components/ui/input';
 import { FieldLabel } from '@/components/ui/label';
-import { Select, type SelectOption } from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
+
 import { useGenerateCampaign } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
+
+import { CHANNEL_LABELS } from '@/constants/channels';
+import type { SelectOption } from '@/components/ui/select';
+import type { Brand, GeneratableChannel, StyleId } from '@media-content/shared';
 
 export function Composer({ brand }: { brand: Brand }) {
   const [prompt, setPrompt] = useState('');
@@ -116,7 +119,9 @@ export function Composer({ brand }: { brand: Brand }) {
 }
 
 const Section = tw.section`
-  flex flex-col gap-5
+  flex
+  flex-col
+  gap-5
 `;
 
 const BriefLabel = tw(FieldLabel)`
@@ -124,5 +129,8 @@ const BriefLabel = tw(FieldLabel)`
 `;
 
 const ChipRow = tw.div`
-  mt-2 flex flex-wrap gap-2
+  mt-2
+  flex
+  flex-wrap
+  gap-2
 `;

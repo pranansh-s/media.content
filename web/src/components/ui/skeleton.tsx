@@ -1,5 +1,7 @@
 import tw from 'tailwind-styled-components';
 
 export const Skeleton = tw.div`
-  animate-pulse rounded-md bg-surface-raised
+  bg-surface-raised
+  animate-pulse
+  rounded-md
 `;

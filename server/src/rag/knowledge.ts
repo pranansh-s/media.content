@@ -1,7 +1,8 @@
-import type { Brand, GeneratableChannel } from '@media-content/shared';
 import { cosineSimilarity } from 'ai';
 
 import type { Store } from '../db/store';
+import type { Brand, GeneratableChannel } from '@media-content/shared';
+
 import { chunkText } from './chunker';
 import { extractUrls, fetchUrlText } from './fetcher';
 

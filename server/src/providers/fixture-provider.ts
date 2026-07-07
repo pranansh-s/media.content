@@ -1,6 +1,5 @@
-import type { TextChannel } from '@media-content/shared';
-
 import type { ContentProvider, GeneratedImage, ImageSpec, TextSpec } from './content-provider';
+import type { TextChannel } from '@media-content/shared';
 
 const TEXT_FIXTURES: Record<TextChannel, (prompt: string, brand: string) => string> = {
   tweet: (prompt, brand) => `🚀 Big news from ${brand}: ${prompt}\n\nTry it today — link below.`,
