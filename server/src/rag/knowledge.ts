@@ -18,7 +18,7 @@ export async function ingestBrand(
   store: Store,
   brand: Brand,
   embedder: Embedder | null,
-  options: IngestOptions = {},
+  options: IngestOptions = {}
 ): Promise<void> {
   if (!embedder) return;
   const fetchText = options.fetchText ?? fetchUrlText;
@@ -45,7 +45,7 @@ export async function ingestBrand(
   store.replaceChunks(
     brand.id,
     'references',
-    referenceChunks.map((text, index) => ({ ref: null, text, embedding: embeddings[index]! })),
+    referenceChunks.map((text, index) => ({ ref: null, text, embedding: embeddings[index]! }))
   );
   store.replaceChunks(
     brand.id,
@@ -54,7 +54,7 @@ export async function ingestBrand(
       ref: chunk.ref,
       text: chunk.text,
       embedding: embeddings[referenceChunks.length + index]!,
-    })),
+    }))
   );
 }
 
@@ -64,7 +64,7 @@ export async function ingestRevision(
   channel: GeneratableChannel,
   body: string,
   embedder: Embedder | null,
-  cap = REVISION_CHUNK_CAP,
+  cap = REVISION_CHUNK_CAP
 ): Promise<void> {
   if (!embedder) return;
   if (store.countChunks(brandId, 'revision') >= cap) return;
@@ -79,7 +79,7 @@ export async function retrieve(
   brandId: string,
   query: string,
   embedder: Embedder | null,
-  k = 6,
+  k = 6
 ): Promise<string[]> {
   if (!embedder) return [];
   const chunks = store.listChunks(brandId);

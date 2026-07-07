@@ -19,9 +19,9 @@ function splitLongParagraph(paragraph: string, targetLength: number): string[] {
   return pieces.flatMap(piece =>
     piece.length > targetLength * 2
       ? Array.from({ length: Math.ceil(piece.length / (targetLength * 2)) }, (_, index) =>
-          piece.slice(index * targetLength * 2, (index + 1) * targetLength * 2),
+          piece.slice(index * targetLength * 2, (index + 1) * targetLength * 2)
         )
-      : [piece],
+      : [piece]
   );
 }
 

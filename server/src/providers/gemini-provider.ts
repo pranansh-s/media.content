@@ -1,11 +1,5 @@
 import { google } from '@ai-sdk/google';
-import {
-  generateImage,
-  generateText,
-  NoImageGeneratedError,
-  type ImageModel,
-  type LanguageModel,
-} from 'ai';
+import { generateImage, generateText, NoImageGeneratedError, type ImageModel, type LanguageModel } from 'ai';
 
 import { buildImagePrompt, buildTextPrompt } from '../prompts/prompts';
 import type { ContentProvider, GeneratedImage, ImageSpec, TextSpec } from './content-provider';

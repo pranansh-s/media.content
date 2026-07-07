@@ -12,7 +12,7 @@ export async function generateCampaignPlan(
     channels: readonly GeneratableChannel[];
     signal?: AbortSignal;
   },
-  model?: LanguageModel,
+  model?: LanguageModel
 ): Promise<CampaignPlan | null> {
   const { system, prompt } = buildPlanPrompt(args);
   try {

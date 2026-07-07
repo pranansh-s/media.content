@@ -149,7 +149,9 @@ function BrandForm({ brand, mode, onClose }: Omit<BrandSettingsProps, 'open'>) {
           }
         />
       </Field>
-      {!isCreate && <HelpText>Links in references are read and indexed — generations quote your real material.</HelpText>}
+      {!isCreate && (
+        <HelpText>Links in references are read and indexed — generations quote your real material.</HelpText>
+      )}
 
       <SaveSection>
         <Button onClick={save} disabled={isSaving || isDeleting || name.trim().length === 0} className="w-full">

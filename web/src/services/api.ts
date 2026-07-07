@@ -62,7 +62,9 @@ export interface CampaignExport {
   campaignId: string;
   prompt: string;
   createdAt: string;
-  assets: Array<{ channel: string; kind: 'text'; body: string } | { channel: string; kind: 'image'; url: string; alt: string }>;
+  assets: Array<
+    { channel: string; kind: 'text'; body: string } | { channel: string; kind: 'image'; url: string; alt: string }
+  >;
 }
 
 export async function exportCampaign(campaignId: string): Promise<CampaignExport> {

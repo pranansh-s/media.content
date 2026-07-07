@@ -6,8 +6,8 @@ interface StudioState {
   activeBrandId: string | null;
   campaignSummaries: CampaignSummary[];
   campaign: Campaign | null;
-  isGenerating: boolean;
   selectedAssetId: string | null;
+  isGenerating: boolean;
   error: string | null;
   setBrands: (brands: Brand[]) => void;
   setActiveBrand: (brandId: string) => void;
@@ -15,11 +15,11 @@ interface StudioState {
   removeBrand: (brandId: string) => void;
   setCampaignSummaries: (campaigns: CampaignSummary[]) => void;
   loadCampaign: (campaign: Campaign) => void;
-  beginGeneration: (campaign: Campaign) => void;
   upsertAsset: (asset: Asset) => void;
+  selectAsset: (assetId: string | null) => void;
+  beginGeneration: (campaign: Campaign) => void;
   finishGeneration: () => void;
   failGeneration: (message: string) => void;
-  selectAsset: (assetId: string | null) => void;
   clearError: () => void;
 }
 
@@ -45,7 +45,9 @@ export const useStudioStore = create<StudioState>()(set => ({
     set(state => {
       const exists = state.brands.some(existing => existing.id === brand.id);
       return {
-        brands: exists ? state.brands.map(existing => (existing.id === brand.id ? brand : existing)) : [...state.brands, brand],
+        brands: exists
+          ? state.brands.map(existing => (existing.id === brand.id ? brand : existing))
+          : [...state.brands, brand],
         activeBrandId: exists ? state.activeBrandId : brand.id,
         ...(exists ? {} : { campaign: null, campaignSummaries: [], selectedAssetId: null }),
       };

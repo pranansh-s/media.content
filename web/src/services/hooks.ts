@@ -123,7 +123,7 @@ export function useGenerateCampaign() {
                 break;
             }
           },
-          controller.signal,
+          controller.signal
         );
       } catch (e) {
         if (controller.signal.aborted) return;

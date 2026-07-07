@@ -103,18 +103,18 @@ function toEmbedding(blob: Buffer): Float32Array {
 
 export function createStore(db: Database) {
   const insertBrandStmt = db.prepare(
-    'INSERT INTO brands (id, name, tagline, writing_style, references_text, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO brands (id, name, tagline, writing_style, references_text, created_at) VALUES (?, ?, ?, ?, ?, ?)'
   );
   const getBrandStmt = db.prepare('SELECT * FROM brands WHERE id = ?');
   const listBrandsStmt = db.prepare('SELECT * FROM brands ORDER BY created_at');
   const updateBrandStmt = db.prepare(
-    'UPDATE brands SET name = ?, tagline = ?, writing_style = ?, references_text = ? WHERE id = ?',
+    'UPDATE brands SET name = ?, tagline = ?, writing_style = ?, references_text = ? WHERE id = ?'
   );
   const deleteBrandStmt = db.prepare('DELETE FROM brands WHERE id = ?');
   const countBrandsStmt = db.prepare('SELECT COUNT(*) AS count FROM brands');
 
   const insertCampaignStmt = db.prepare(
-    'INSERT INTO campaigns (id, brand_id, prompt, style_id, style_text, plan_json, channels, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO campaigns (id, brand_id, prompt, style_id, style_text, plan_json, channels, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
   const getCampaignStmt = db.prepare('SELECT * FROM campaigns WHERE id = ?');
   const listCampaignsStmt = db.prepare('SELECT * FROM campaigns WHERE brand_id = ? ORDER BY created_at DESC');
@@ -122,28 +122,28 @@ export function createStore(db: Database) {
   const setCampaignPlanStmt = db.prepare('UPDATE campaigns SET plan_json = ? WHERE id = ?');
 
   const insertAssetStmt = db.prepare(
-    'INSERT INTO assets (id, campaign_id, kind, channel, status) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO assets (id, campaign_id, kind, channel, status) VALUES (?, ?, ?, ?, ?)'
   );
   const getAssetStmt = db.prepare('SELECT * FROM assets WHERE id = ?');
   const listAssetsStmt = db.prepare('SELECT * FROM assets WHERE campaign_id = ? ORDER BY rowid');
   const updateAssetStatusStmt = db.prepare('UPDATE assets SET status = ? WHERE id = ?');
 
   const insertRevisionStmt = db.prepare(
-    'INSERT INTO revisions (id, asset_id, created_at, prompt, source, body, url, alt, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO revisions (id, asset_id, created_at, prompt, source, body, url, alt, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
   const listRevisionsStmt = db.prepare('SELECT * FROM revisions WHERE asset_id = ? ORDER BY position');
   const nextPositionStmt = db.prepare(
-    'SELECT COALESCE(MAX(position), -1) + 1 AS next FROM revisions WHERE asset_id = ?',
+    'SELECT COALESCE(MAX(position), -1) + 1 AS next FROM revisions WHERE asset_id = ?'
   );
 
   const insertChunkStmt = db.prepare(
-    'INSERT INTO brand_chunks (id, brand_id, source, ref, text, embedding) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO brand_chunks (id, brand_id, source, ref, text, embedding) VALUES (?, ?, ?, ?, ?, ?)'
   );
   const deleteChunksBySourceStmt = db.prepare('DELETE FROM brand_chunks WHERE brand_id = ? AND source = ?');
   const listChunksStmt = db.prepare('SELECT * FROM brand_chunks WHERE brand_id = ?');
   const countChunksStmt = db.prepare('SELECT COUNT(*) AS count FROM brand_chunks WHERE brand_id = ?');
   const countChunksBySourceStmt = db.prepare(
-    'SELECT COUNT(*) AS count FROM brand_chunks WHERE brand_id = ? AND source = ?',
+    'SELECT COUNT(*) AS count FROM brand_chunks WHERE brand_id = ? AND source = ?'
   );
 
   function hydrateAsset(row: AssetRow): Asset {
@@ -189,7 +189,7 @@ export function createStore(db: Database) {
       campaign.plan ? JSON.stringify(campaign.plan) : null,
       JSON.stringify(campaign.channels),
       campaign.status,
-      campaign.createdAt,
+      campaign.createdAt
     );
     for (const asset of campaign.assets) {
       insertAssetStmt.run(asset.id, campaign.id, asset.kind, asset.channel, asset.status);
@@ -202,7 +202,7 @@ export function createStore(db: Database) {
       for (const chunk of chunks) {
         insertChunkStmt.run(randomUUID(), brandId, source, chunk.ref, chunk.text, Buffer.from(chunk.embedding.buffer));
       }
-    },
+    }
   );
 
   return {
@@ -215,7 +215,7 @@ export function createStore(db: Database) {
           DEFAULT_BRAND.tagline,
           DEFAULT_BRAND.writingStyle,
           DEFAULT_BRAND.references,
-          new Date().toISOString(),
+          new Date().toISOString()
         );
       }
       return this.listBrands()[0]!;
@@ -238,7 +238,7 @@ export function createStore(db: Database) {
         brand.tagline,
         brand.writingStyle,
         brand.references,
-        new Date().toISOString(),
+        new Date().toISOString()
       );
       return brand;
     },
@@ -274,7 +274,7 @@ export function createStore(db: Database) {
 
     failInFlightAssets(campaignId: string) {
       db.prepare(
-        "UPDATE assets SET status = 'failed' WHERE campaign_id = ? AND status IN ('pending','generating')",
+        "UPDATE assets SET status = 'failed' WHERE campaign_id = ? AND status IN ('pending','generating')"
       ).run(campaignId);
     },
 
@@ -294,7 +294,7 @@ export function createStore(db: Database) {
         'body' in revision ? revision.body : null,
         'url' in revision ? revision.url : null,
         'alt' in revision ? revision.alt : null,
-        next,
+        next
       );
       return hydrateAsset(getAssetStmt.get(assetId) as AssetRow);
     },
@@ -302,9 +302,7 @@ export function createStore(db: Database) {
     listCampaigns(brandId: string, query?: string): CampaignSummary[] {
       const rows = query
         ? (db
-            .prepare(
-              'SELECT * FROM campaigns WHERE brand_id = ? AND prompt LIKE ? ORDER BY created_at DESC',
-            )
+            .prepare('SELECT * FROM campaigns WHERE brand_id = ? AND prompt LIKE ? ORDER BY created_at DESC')
             .all(brandId, `%${query}%`) as CampaignRow[])
         : (listCampaignsStmt.all(brandId) as CampaignRow[]);
       return rows.map(row => {
@@ -316,7 +314,7 @@ export function createStore(db: Database) {
     listImageUrlsForCampaign(campaignId: string): string[] {
       const rows = db
         .prepare(
-          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id WHERE a.campaign_id = ? AND r.url IS NOT NULL',
+          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id WHERE a.campaign_id = ? AND r.url IS NOT NULL'
         )
         .all(campaignId) as { url: string }[];
       return rows.map(r => r.url);
@@ -325,7 +323,7 @@ export function createStore(db: Database) {
     listImageUrlsForBrand(brandId: string): string[] {
       const rows = db
         .prepare(
-          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id JOIN campaigns c ON c.id = a.campaign_id WHERE c.brand_id = ? AND r.url IS NOT NULL',
+          'SELECT r.url AS url FROM revisions r JOIN assets a ON a.id = r.asset_id JOIN campaigns c ON c.id = a.campaign_id WHERE c.brand_id = ? AND r.url IS NOT NULL'
         )
         .all(brandId) as { url: string }[];
       return rows.map(r => r.url);
@@ -336,12 +334,14 @@ export function createStore(db: Database) {
       return result.changes > 0;
     },
 
-    getRevision(assetId: string, revisionId: string): (TextRevision | ImageRevision) & { kind: 'text' | 'image' } | null {
+    getRevision(
+      assetId: string,
+      revisionId: string
+    ): ((TextRevision | ImageRevision) & { kind: 'text' | 'image' }) | null {
       const assetRow = getAssetStmt.get(assetId) as AssetRow | undefined;
       if (!assetRow) return null;
-      const row = db
-        .prepare('SELECT * FROM revisions WHERE id = ? AND asset_id = ?')
-        .get(revisionId, assetId) as RevisionRow | undefined;
+      const row = db.prepare('SELECT * FROM revisions WHERE id = ? AND asset_id = ?').get(revisionId, assetId) as
+        RevisionRow | undefined;
       if (!row) return null;
       return { ...toRevision(row, assetRow.kind), kind: assetRow.kind };
     },
@@ -372,7 +372,7 @@ export function createStore(db: Database) {
     replaceChunks(
       brandId: string,
       source: ChunkSource,
-      chunks: { ref: string | null; text: string; embedding: Float32Array }[],
+      chunks: { ref: string | null; text: string; embedding: Float32Array }[]
     ) {
       replaceChunksTx(brandId, source, chunks);
     },
@@ -387,7 +387,7 @@ export function createStore(db: Database) {
       ref: string | null,
       text: string,
       embedding: Float32Array,
-      cap: number,
+      cap: number
     ): boolean {
       const tx = db.transaction(() => {
         const { count } = countChunksBySourceStmt.get(brandId, source) as { count: number };
@@ -400,7 +400,13 @@ export function createStore(db: Database) {
 
     listChunks(brandId: string): BrandChunk[] {
       return (
-        listChunksStmt.all(brandId) as { id: string; source: ChunkSource; ref: string | null; text: string; embedding: Buffer }[]
+        listChunksStmt.all(brandId) as {
+          id: string;
+          source: ChunkSource;
+          ref: string | null;
+          text: string;
+          embedding: Buffer;
+        }[]
       ).map(row => ({ ...row, embedding: toEmbedding(row.embedding) }));
     },
 

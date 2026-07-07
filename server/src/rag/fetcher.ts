@@ -16,7 +16,7 @@ function isPrivateIp(ip: string): boolean {
   }
   if (v === 6) {
     const lower = ip.toLowerCase();
-    if (lower === '::1' || lower === '::' ) return true;
+    if (lower === '::1' || lower === '::') return true;
     if (lower.startsWith('fe80:') || lower.startsWith('fc') || lower.startsWith('fd')) return true;
     if (lower.startsWith('::ffff:')) return isPrivateIp(lower.slice('::ffff:'.length));
     return false;

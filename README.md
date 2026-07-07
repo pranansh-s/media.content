@@ -39,20 +39,20 @@ web/     @media-content/web     — Next.js 16 App Router studio + marketing. Po
 
 All routes validate input with the shared Zod contract.
 
-| Method | Route | |
-|---|---|---|
-| `GET` | `/api/health` | Liveness |
-| `GET / POST` | `/api/brands` | List / create |
-| `GET / PUT / DELETE` | `/api/brands/:id` | Read / update / delete |
-| `GET` | `/api/brands/:id/campaigns` | List a brand's campaigns |
-| `POST` | `/api/brands/:id/campaigns` | Plan + generate — **streams per-asset via SSE** |
-| `GET` | `/api/campaigns/:id` | Fetch campaign with assets |
-| `GET` | `/api/campaigns/:id/export` | Export campaign bundle |
-| `DELETE` | `/api/campaigns/:id` | Delete campaign |
-| `POST` | `/api/assets/:id/refine` | Refine with a follow-up prompt |
-| `POST` | `/api/assets/:id/regenerate` | Regenerate from scratch |
-| `POST` | `/api/assets/:id/revisions` | Save a manual edit |
-| `POST` | `/api/assets/:id/revisions/:revisionId/restore` | Restore a prior revision |
+| Method               | Route                                           |                                                 |
+| -------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `GET`                | `/api/health`                                   | Liveness                                        |
+| `GET / POST`         | `/api/brands`                                   | List / create                                   |
+| `GET / PUT / DELETE` | `/api/brands/:id`                               | Read / update / delete                          |
+| `GET`                | `/api/brands/:id/campaigns`                     | List a brand's campaigns                        |
+| `POST`               | `/api/brands/:id/campaigns`                     | Plan + generate — **streams per-asset via SSE** |
+| `GET`                | `/api/campaigns/:id`                            | Fetch campaign with assets                      |
+| `GET`                | `/api/campaigns/:id/export`                     | Export campaign bundle                          |
+| `DELETE`             | `/api/campaigns/:id`                            | Delete campaign                                 |
+| `POST`               | `/api/assets/:id/refine`                        | Refine with a follow-up prompt                  |
+| `POST`               | `/api/assets/:id/regenerate`                    | Regenerate from scratch                         |
+| `POST`               | `/api/assets/:id/revisions`                     | Save a manual edit                              |
+| `POST`               | `/api/assets/:id/revisions/:revisionId/restore` | Restore a prior revision                        |
 
 ## Getting Started
 
