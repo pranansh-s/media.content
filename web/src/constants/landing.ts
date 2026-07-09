@@ -10,7 +10,7 @@ export const HEADER_CTA = 'Open the studio';
 
 export const HERO = {
   eyebrow: 'For teams without a press desk',
-  title: ['Your launch,', 'syndicated.'] as const,
+  title: ['Your launch,', 'syndicated.'],
   lead: 'Write one brief. media.content turns it into tweets, LinkedIn posts, release notes, articles, and banners — in your voice, on your brand, ready to post.',
   primaryCta: 'Open the studio',
   secondaryCta: 'see how it works →',
