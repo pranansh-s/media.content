@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server';
-
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+  throw new Error(
+    'Clerk keys missing — set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in web/.env (see web/.env.example)',
+  );
+}
 
 const isProtectedRoute = createRouteMatcher(['/studio(.*)']);
 
-const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
-
-export default clerkEnabled
-  ? clerkMiddleware(async (auth, req) => {
-      if (isProtectedRoute(req)) await auth.protect();
-    })
-  : () => NextResponse.next();
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: [

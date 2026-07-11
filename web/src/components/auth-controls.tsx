@@ -4,9 +4,7 @@ import Link from 'next/link';
 
 import { UserButton, useUser } from '@clerk/nextjs';
 
-import { clerkEnabled } from '@/lib/auth';
-
-function SessionControls() {
+export function AuthControls() {
   const { isLoaded, isSignedIn } = useUser();
   if (!isLoaded) return null;
 
@@ -17,9 +15,4 @@ function SessionControls() {
       sign in
     </Link>
   );
-}
-
-export function AuthControls() {
-  if (!clerkEnabled) return null;
-  return <SessionControls />;
 }

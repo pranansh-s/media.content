@@ -42,13 +42,11 @@ import { createLimiter, withRetry } from './lib/limit';
 import { log } from './lib/log';
 import { createRateLimiter } from './lib/rate-limit';
 import { generateCampaignPlan } from './pipeline/plan';
-import { isGeminiEnabled } from './providers';
-import { FixtureProvider } from './providers/fixture-provider';
 import { createEmbedderFromEnv } from './rag/embeddings';
 import { ingestBrand, ingestRevision, retrieve } from './rag/knowledge';
 
 export interface AppOptions {
-  provider?: ContentProvider;
+  provider: ContentProvider;
   db?: Database;
   concurrency?: number;
   embedder?: Embedder | null;
@@ -101,19 +99,16 @@ function revisionBase(prompt: string | null, source: TextRevision['source']) {
   return { id: randomUUID(), createdAt: new Date().toISOString(), prompt, source };
 }
 
-export function createApp(options: AppOptions = {}) {
-  const provider = options.provider ?? new FixtureProvider();
+export function createApp(options: AppOptions) {
+  const provider = options.provider;
   const db = options.db ?? openDatabase();
   const store = createStore(db);
   store.seedDefaultBrand();
   store.reconcileStuckStatuses();
   const embedder = options.embedder !== undefined ? options.embedder : createEmbedderFromEnv();
   const planner =
-    options.planner ??
-    (isGeminiEnabled()
-      ? (args: Parameters<typeof generateCampaignPlan>[0]) => generateCampaignPlan(args)
-      : async () => null);
-  const concurrency = options.concurrency ?? (Number(process.env.GEMINI_CONCURRENCY) || (isGeminiEnabled() ? 2 : 8));
+    options.planner ?? ((args: Parameters<typeof generateCampaignPlan>[0]) => generateCampaignPlan(args));
+  const concurrency = options.concurrency ?? (Number(process.env.GEMINI_CONCURRENCY) || 2);
   const idempotencyCache = new Map<string, { campaignId: string; expiresAt: number }>();
   const IDEMPOTENCY_TTL_MS = 10 * 60 * 1000;
   const heartbeatMs = options.heartbeatMs ?? Number(process.env.SSE_HEARTBEAT_MS ?? 20_000);
