@@ -10,6 +10,7 @@ interface StudioState {
   selectedAssetId: string | null;
   isGenerating: boolean;
   error: string | null;
+  assetErrors: Record<string, string>;
   setBrands: (brands: Brand[]) => void;
   setActiveBrand: (brandId: string) => void;
   upsertBrand: (brand: Brand) => void;
@@ -18,9 +19,12 @@ interface StudioState {
   loadCampaign: (campaign: Campaign) => void;
   upsertAsset: (asset: Asset) => void;
   selectAsset: (assetId: string | null) => void;
-  beginGeneration: (campaign: Campaign) => void;
+  startGeneration: () => void;
+  receiveCampaign: (campaign: Campaign) => void;
   finishGeneration: () => void;
   failGeneration: (message: string) => void;
+  setAssetError: (assetId: string, message: string) => void;
+  clearActiveCampaign: (campaignId: string) => void;
   clearError: () => void;
 }
 
@@ -32,6 +36,7 @@ export const useStudioStore = create<StudioState>()(set => ({
   isGenerating: false,
   selectedAssetId: null,
   error: null,
+  assetErrors: {},
   setBrands: brands =>
     set(state => ({
       brands,
@@ -41,7 +46,14 @@ export const useStudioStore = create<StudioState>()(set => ({
           : (brands[0]?.id ?? null),
     })),
   setActiveBrand: brandId =>
-    set({ activeBrandId: brandId, campaign: null, campaignSummaries: [], selectedAssetId: null, error: null }),
+    set({
+      activeBrandId: brandId,
+      campaign: null,
+      campaignSummaries: [],
+      selectedAssetId: null,
+      error: null,
+      assetErrors: {},
+    }),
   upsertBrand: brand =>
     set(state => {
       const exists = state.brands.some(existing => existing.id === brand.id);
@@ -50,7 +62,7 @@ export const useStudioStore = create<StudioState>()(set => ({
           ? state.brands.map(existing => (existing.id === brand.id ? brand : existing))
           : [...state.brands, brand],
         activeBrandId: exists ? state.activeBrandId : brand.id,
-        ...(exists ? {} : { campaign: null, campaignSummaries: [], selectedAssetId: null }),
+        ...(exists ? {} : { campaign: null, campaignSummaries: [], selectedAssetId: null, assetErrors: {} }),
       };
     }),
   removeBrand: brandId =>
@@ -63,30 +75,46 @@ export const useStudioStore = create<StudioState>()(set => ({
         campaign: null,
         campaignSummaries: [],
         selectedAssetId: null,
+        assetErrors: {},
       };
     }),
   setCampaignSummaries: campaignSummaries => set({ campaignSummaries }),
-  loadCampaign: campaign => set({ campaign, isGenerating: false, selectedAssetId: null, error: null }),
-  beginGeneration: campaign => set({ campaign, isGenerating: true, selectedAssetId: null, error: null }),
+  loadCampaign: campaign => set({ campaign, isGenerating: false, selectedAssetId: null, error: null, assetErrors: {} }),
+  startGeneration: () => set({ isGenerating: true, error: null }),
+  receiveCampaign: campaign =>
+    set(state =>
+      state.campaign?.id === campaign.id
+        ? { campaign }
+        : { campaign, selectedAssetId: null, error: null, assetErrors: {} }
+    ),
   upsertAsset: asset =>
     set(state => {
       if (!state.campaign) return {};
-      const rank = { pending: 0, generating: 1, failed: 2, complete: 3 } as const;
       return {
         campaign: {
           ...state.campaign,
-          assets: state.campaign.assets.map(a =>
-            a.id === asset.id && rank[a.status] > rank[asset.status] ? a : a.id === asset.id ? asset : a
-          ),
+          assets: state.campaign.assets.map(existing => (existing.id === asset.id ? asset : existing)),
         },
       };
     }),
-  finishGeneration: () =>
+  finishGeneration: () => set({ isGenerating: false }),
+  failGeneration: message =>
     set(state => ({
       isGenerating: false,
-      campaign: state.campaign ? { ...state.campaign, status: 'complete' } : null,
+      error: message,
+      campaign: state.campaign
+        ? {
+            ...state.campaign,
+            status: 'failed',
+            assets: state.campaign.assets.map(asset =>
+              asset.status === 'pending' || asset.status === 'generating' ? { ...asset, status: 'failed' } : asset
+            ),
+          }
+        : null,
     })),
-  failGeneration: message => set({ isGenerating: false, error: message }),
+  setAssetError: (assetId, message) => set(state => ({ assetErrors: { ...state.assetErrors, [assetId]: message } })),
+  clearActiveCampaign: campaignId =>
+    set(state => (state.campaign?.id === campaignId ? { campaign: null, selectedAssetId: null, assetErrors: {} } : {})),
   selectAsset: assetId => set({ selectedAssetId: assetId }),
   clearError: () => set({ error: null }),
 }));

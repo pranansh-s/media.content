@@ -142,7 +142,7 @@ export const getCampaignResponseSchema = z.object({
 
 export const campaignEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('campaign'), campaign: campaignSchema }),
-  z.object({ type: z.literal('asset'), asset: assetSchema }),
+  z.object({ type: z.literal('asset'), asset: assetSchema, message: z.string().optional() }),
   z.object({ type: z.literal('done') }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);

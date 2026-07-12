@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import tw from 'tailwind-styled-components';
 
 import { Input } from '@/components/ui/input';
@@ -9,10 +11,56 @@ import { useCampaignHistory } from '@/services/hooks';
 import { useStudioStore } from '@/stores/studio';
 
 import { CHANNEL_TAGS } from '@/constants/channels';
+import type { CampaignSummary } from '@media-content/shared';
 
 function timestamp(iso: string): string {
   const date = new Date(iso);
   return `${date.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })} ${date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+}
+
+function HistoryItem({
+  summary,
+  active,
+  disabled,
+  onOpen,
+  onDelete,
+}: {
+  summary: CampaignSummary;
+  active: boolean;
+  disabled: boolean;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+
+  return (
+    <li className="relative">
+      <Item type="button" disabled={disabled} $active={active} onClick={() => !active && onOpen()}>
+        <ItemTop>
+          <Timestamp>{timestamp(summary.createdAt)}</Timestamp>
+          <Status $failed={summary.status === 'failed'}>{summary.status}</Status>
+        </ItemTop>
+        <Prompt>{summary.prompt}</Prompt>
+        <TagRow>
+          {summary.channels.map(channel => (
+            <Tag key={channel}>{CHANNEL_TAGS[channel]}</Tag>
+          ))}
+        </TagRow>
+      </Item>
+      <DeleteButton
+        type="button"
+        disabled={disabled}
+        aria-label={`${confirming ? 'Confirm delete' : 'Delete'} campaign ${summary.prompt}`}
+        onClick={() => {
+          if (confirming) onDelete();
+          else setConfirming(true);
+        }}
+        onBlur={() => setConfirming(false)}
+      >
+        {confirming ? 'sure?' : 'delete'}
+      </DeleteButton>
+    </li>
+  );
 }
 
 export function CampaignHistory() {
@@ -36,43 +84,14 @@ export function CampaignHistory() {
       </SearchRow>
       <List>
         {campaignSummaries.map(summary => (
-          <li key={summary.id}>
-            <Item
-              type="button"
-              disabled={isOpening || isGenerating}
-              $active={summary.id === activeCampaignId}
-              onClick={() => summary.id !== activeCampaignId && openCampaign(summary.id)}
-            >
-              <ItemTop>
-                <Timestamp>{timestamp(summary.createdAt)}</Timestamp>
-                <Status $failed={summary.status === 'failed'}>{summary.status}</Status>
-                <DeleteButton
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Delete campaign ${summary.prompt}`}
-                  onClick={(event: React.MouseEvent<HTMLSpanElement>) => {
-                    event.stopPropagation();
-                    void removeCampaign(summary.id);
-                  }}
-                  onKeyDown={(event: React.KeyboardEvent<HTMLSpanElement>) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      void removeCampaign(summary.id);
-                    }
-                  }}
-                >
-                  delete
-                </DeleteButton>
-              </ItemTop>
-              <Prompt>{summary.prompt}</Prompt>
-              <TagRow>
-                {summary.channels.map(channel => (
-                  <Tag key={channel}>{CHANNEL_TAGS[channel]}</Tag>
-                ))}
-              </TagRow>
-            </Item>
-          </li>
+          <HistoryItem
+            key={summary.id}
+            summary={summary}
+            active={summary.id === activeCampaignId}
+            disabled={isOpening || isGenerating}
+            onOpen={() => void openCampaign(summary.id)}
+            onDelete={() => void removeCampaign(summary.id)}
+          />
         ))}
       </List>
     </Section>
@@ -129,6 +148,7 @@ const ItemTop = tw.div`
   w-full
   items-center
   gap-2
+  pr-12
 `;
 
 const Timestamp = tw.span`
@@ -144,15 +164,22 @@ const Status = tw.span<{ $failed: boolean }>`
   uppercase
   ${p => (p.$failed ? 'text-danger' : 'text-faint')} `;
 
-const DeleteButton = tw.span`
+const DeleteButton = tw.button`
   text-muted
   hover:text-danger
+  focus-visible:outline-accent
+  disabled:text-faint
+  absolute
+  top-3
+  right-3
   cursor-pointer
   font-mono
   text-[10px]
   underline
   decoration-dotted
   underline-offset-2
+  focus-visible:outline-2
+  disabled:cursor-default
 `;
 
 const Prompt = tw.span`

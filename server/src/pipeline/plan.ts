@@ -21,7 +21,7 @@ export async function generateCampaignPlan(
   const { system, prompt } = buildPlanPrompt(args);
   try {
     const result = await generateObject({
-      model: model ?? google(process.env.GEMINI_TEXT_MODEL ?? 'gemini-2.5-flash'),
+      model: model ?? google(process.env.GEMINI_TEXT_MODEL ?? 'gemini-3.5-flash'),
       schema: campaignPlanSchema,
       system,
       prompt,

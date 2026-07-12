@@ -51,21 +51,33 @@ export function useCampaignHistory() {
   const campaignSummaries = useStudioStore(s => s.campaignSummaries);
   const setCampaignSummaries = useStudioStore(s => s.setCampaignSummaries);
   const loadCampaign = useStudioStore(s => s.loadCampaign);
+  const clearActiveCampaign = useStudioStore(s => s.clearActiveCampaign);
   const isGenerating = useStudioStore(s => s.isGenerating);
   const [isOpening, setIsOpening] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const listAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const refresh = useCallback(async () => {
     if (!activeBrandId) return;
+    listAbortRef.current?.abort();
+    const controller = new AbortController();
+    listAbortRef.current = controller;
     try {
-      setCampaignSummaries(await fetchCampaigns(activeBrandId, query || undefined));
+      setCampaignSummaries(await fetchCampaigns(activeBrandId, debouncedQuery || undefined, controller.signal));
     } catch {
-      setCampaignSummaries([]);
+      if (!controller.signal.aborted) setCampaignSummaries([]);
     }
-  }, [activeBrandId, query, setCampaignSummaries]);
+  }, [activeBrandId, debouncedQuery, setCampaignSummaries]);
 
   useEffect(() => {
     void refresh();
+    return () => listAbortRef.current?.abort();
   }, [refresh, isGenerating]);
 
   const openCampaign = useCallback(
@@ -83,38 +95,48 @@ export function useCampaignHistory() {
   const removeCampaign = useCallback(
     async (campaignId: string) => {
       await deleteCampaign(campaignId);
+      clearActiveCampaign(campaignId);
       await refresh();
     },
-    [refresh]
+    [refresh, clearActiveCampaign]
   );
 
   return { campaignSummaries, openCampaign, isOpening, refresh, query, setQuery, removeCampaign };
 }
 
 export function useGenerateCampaign() {
-  const { beginGeneration, upsertAsset, finishGeneration, failGeneration } = useStudioStore();
   const activeBrandId = useStudioStore(s => s.activeBrandId);
+  const startGeneration = useStudioStore(s => s.startGeneration);
+  const receiveCampaign = useStudioStore(s => s.receiveCampaign);
+  const upsertAsset = useStudioStore(s => s.upsertAsset);
+  const setAssetError = useStudioStore(s => s.setAssetError);
+  const finishGeneration = useStudioStore(s => s.finishGeneration);
+  const failGeneration = useStudioStore(s => s.failGeneration);
   const controllerRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
 
   useEffect(() => () => controllerRef.current?.abort(), []);
 
   return useCallback(
     async (request: CreateCampaignRequest) => {
-      if (!activeBrandId) return;
-      controllerRef.current?.abort();
+      if (!activeBrandId || inFlightRef.current) return;
+      inFlightRef.current = true;
+      startGeneration();
       const controller = new AbortController();
       controllerRef.current = controller;
       try {
         await createCampaign(
           activeBrandId,
           request,
+          crypto.randomUUID(),
           event => {
             switch (event.type) {
               case 'campaign':
-                beginGeneration(event.campaign);
+                receiveCampaign(event.campaign);
                 break;
               case 'asset':
                 upsertAsset(event.asset);
+                if (event.message) setAssetError(event.asset.id, event.message);
                 break;
               case 'done':
                 finishGeneration();
@@ -127,29 +149,28 @@ export function useGenerateCampaign() {
           controller.signal
         );
       } catch (e) {
-        if (controller.signal.aborted) return;
-        failGeneration(e instanceof Error ? e.message : 'Generation failed');
+        if (!controller.signal.aborted) failGeneration(e instanceof Error ? e.message : 'Generation failed');
+      } finally {
+        inFlightRef.current = false;
+        if (!controller.signal.aborted) finishGeneration();
       }
     },
-    [activeBrandId, beginGeneration, upsertAsset, finishGeneration, failGeneration]
+    [activeBrandId, startGeneration, receiveCampaign, upsertAsset, setAssetError, finishGeneration, failGeneration]
   );
 }
 
 function useAssetAction(action: (assetId: string, input: string) => Promise<Asset>) {
   const upsertAsset = useStudioStore(s => s.upsertAsset);
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const run = useCallback(
-    async (assetId: string, input: string) => {
+    async (assetId: string, input: string): Promise<string | null> => {
       setIsPending(true);
-      setError(null);
       try {
         upsertAsset(await action(assetId, input));
-        return true;
+        return null;
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Request failed');
-        return false;
+        return e instanceof Error ? e.message : 'Request failed';
       } finally {
         setIsPending(false);
       }
@@ -157,43 +178,27 @@ function useAssetAction(action: (assetId: string, input: string) => Promise<Asse
     [action, upsertAsset]
   );
 
-  return { run, isPending, error };
+  return { run, isPending };
 }
 
 export function useRefineAsset() {
-  const { run, isPending, error } = useAssetAction(refineAsset);
-  return { refine: run, isRefining: isPending, error };
+  const { run, isPending } = useAssetAction(refineAsset);
+  return { refine: run, isRefining: isPending };
 }
 
 export function useRegenerateAsset() {
-  const { run, isPending, error } = useAssetAction(useCallback((assetId: string) => regenerateAsset(assetId), []));
-  return { regenerate: useCallback((assetId: string) => run(assetId, ''), [run]), isRegenerating: isPending, error };
+  const { run, isPending } = useAssetAction(useCallback((assetId: string) => regenerateAsset(assetId), []));
+  return { regenerate: useCallback((assetId: string) => run(assetId, ''), [run]), isRegenerating: isPending };
 }
 
 export function useSaveRevision() {
-  const { run, isPending, error } = useAssetAction(saveRevision);
-  return { save: run, isSaving: isPending, error };
+  const { run, isPending } = useAssetAction(saveRevision);
+  return { save: run, isSaving: isPending };
 }
 
 export function useRestoreRevision() {
-  const upsertAsset = useStudioStore(s => s.upsertAsset);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const restore = useCallback(
-    async (assetId: string, revisionId: string) => {
-      setIsRestoring(true);
-      setError(null);
-      try {
-        upsertAsset(await restoreRevision(assetId, revisionId));
-        return true;
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Restore failed');
-        return false;
-      } finally {
-        setIsRestoring(false);
-      }
-    },
-    [upsertAsset]
+  const { run, isPending } = useAssetAction(
+    useCallback((assetId: string, revisionId: string) => restoreRevision(assetId, revisionId), [])
   );
-  return { restore, isRestoring, error };
+  return { restore: run, isRestoring: isPending };
 }

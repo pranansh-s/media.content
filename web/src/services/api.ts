@@ -51,9 +51,13 @@ export async function deleteBrand(brandId: string): Promise<void> {
   await ensureOk(await fetch(`/api/brands/${brandId}`, { method: 'DELETE' }));
 }
 
-export async function fetchCampaigns(brandId: string, query?: string): Promise<CampaignSummary[]> {
+export async function fetchCampaigns(
+  brandId: string,
+  query?: string,
+  signal?: AbortSignal
+): Promise<CampaignSummary[]> {
   const suffix = query ? `?q=${encodeURIComponent(query)}` : '';
-  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns${suffix}`));
+  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns${suffix}`, { signal }));
   return listCampaignsResponseSchema.parse(await res.json()).campaigns;
 }
 
@@ -87,10 +91,18 @@ export async function fetchCampaign(campaignId: string): Promise<Campaign> {
 export async function createCampaign(
   brandId: string,
   request: CreateCampaignRequest,
+  idempotencyKey: string,
   onEvent: (event: CampaignEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await ensureOk(await fetch(`/api/brands/${brandId}/campaigns`, { ...jsonInit('POST', request), signal }));
+  const res = await ensureOk(
+    await fetch(`/api/brands/${brandId}/campaigns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+      body: JSON.stringify(request),
+      signal,
+    })
+  );
 
   const reader = res.body?.getReader();
   if (!reader) {
@@ -110,15 +122,19 @@ export async function createCampaign(
     }
     onEvent(campaignEventSchema.parse(parsed));
   };
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const frames = buffer.split(/\r?\n\r?\n/);
-    buffer = frames.pop() ?? '';
-    for (const frame of frames) dispatch(frame);
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split(/\r?\n\r?\n/);
+      buffer = frames.pop() ?? '';
+      for (const frame of frames) dispatch(frame);
+    }
+    if (buffer.trim()) dispatch(buffer);
+  } finally {
+    await reader.cancel().catch(() => {});
   }
-  if (buffer.trim()) dispatch(buffer);
 }
 
 async function assetRequest(url: string, init?: RequestInit): Promise<Asset> {

@@ -66,6 +66,12 @@ function isTextChannel(channel: GeneratableChannel): channel is TextChannel {
   return (TEXT_CHANNELS as readonly string[]).includes(channel);
 }
 
+function upstreamMessage(error: unknown): string {
+  if (!(error instanceof Error)) return 'Generation failed';
+  const statusCode = (error as { statusCode?: number }).statusCode;
+  return statusCode ? `Upstream ${statusCode}: ${error.message}` : error.message;
+}
+
 function zodToValidation(error: ZodError): ValidationError {
   const first = error.issues[0];
   const detail = first ? `${first.path.join('.') || 'body'}: ${first.message}` : 'Invalid request';
@@ -106,8 +112,7 @@ export function createApp(options: AppOptions) {
   store.seedDefaultBrand();
   store.reconcileStuckStatuses();
   const embedder = options.embedder !== undefined ? options.embedder : createEmbedderFromEnv();
-  const planner =
-    options.planner ?? ((args: Parameters<typeof generateCampaignPlan>[0]) => generateCampaignPlan(args));
+  const planner = options.planner ?? ((args: Parameters<typeof generateCampaignPlan>[0]) => generateCampaignPlan(args));
   const concurrency = options.concurrency ?? (Number(process.env.GEMINI_CONCURRENCY) || 2);
   const idempotencyCache = new Map<string, { campaignId: string; expiresAt: number }>();
   const IDEMPOTENCY_TTL_MS = 10 * 60 * 1000;
@@ -248,22 +253,21 @@ export function createApp(options: AppOptions) {
       if (!parsed.success) throw zodToValidation(parsed.error);
 
       const idempotencyKey = req.header('idempotency-key');
-      if (idempotencyKey) {
-        const cacheKey = `${brand.id}:${idempotencyKey}`;
+      const cacheKey = idempotencyKey ? `${brand.id}:${idempotencyKey}` : null;
+      if (cacheKey) {
         const now = Date.now();
         for (const [k, v] of idempotencyCache) if (v.expiresAt < now) idempotencyCache.delete(k);
         const cached = idempotencyCache.get(cacheKey);
         if (cached) {
           const existing = store.getCampaign(cached.campaignId);
-          if (existing) {
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.flushHeaders();
-            sendEvent(res, { type: 'campaign', campaign: existing });
-            for (const asset of existing.assets) sendEvent(res, { type: 'asset', asset });
-            sendEvent(res, { type: 'done' });
-            return res.end();
-          }
+          if (!existing) throw new ConflictError('A campaign with this Idempotency-Key is already being created');
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.flushHeaders();
+          sendEvent(res, { type: 'campaign', campaign: existing });
+          for (const asset of existing.assets) sendEvent(res, { type: 'asset', asset });
+          sendEvent(res, { type: 'done' });
+          return res.end();
         }
       }
 
@@ -274,6 +278,7 @@ export function createApp(options: AppOptions) {
       const style = resolveStyle(brand, styleId, customStyle);
       const controller = new AbortController();
       const campaignId = randomUUID();
+      if (cacheKey) idempotencyCache.set(cacheKey, { campaignId, expiresAt: Date.now() + IDEMPOTENCY_TTL_MS });
       res.on('close', () => {
         if (!res.writableEnded) {
           controller.abort();
@@ -310,12 +315,6 @@ export function createApp(options: AppOptions) {
           createdAt: new Date().toISOString(),
         };
         store.insertCampaign(campaign, style);
-        if (idempotencyKey) {
-          idempotencyCache.set(`${brand.id}:${idempotencyKey}`, {
-            campaignId,
-            expiresAt: Date.now() + IDEMPOTENCY_TTL_MS,
-          });
-        }
         sendEvent(res, { type: 'campaign', campaign });
 
         const limit = createLimiter(concurrency);
@@ -347,18 +346,36 @@ export function createApp(options: AppOptions) {
                   completed = store.appendRevision(asset.id, { ...revisionBase(null, 'generated'), ...image });
                 }
                 sendEvent(res, { type: 'asset', asset: completed });
-              } catch {
+              } catch (error) {
+                log.error(
+                  { err: error, campaignId, assetId: asset.id, channel: asset.channel },
+                  'asset generation failed'
+                );
                 store.updateAssetStatus(asset.id, 'failed');
-                sendEvent(res, { type: 'asset', asset: { ...asset, status: 'failed' } });
+                sendEvent(res, {
+                  type: 'asset',
+                  asset: { ...asset, status: 'failed' },
+                  message: upstreamMessage(error),
+                });
               }
             })
           )
         );
 
-        store.setCampaignStatus(campaignId, signal.aborted ? 'failed' : 'complete');
+        const generated = store.getCampaign(campaignId);
+        const anyComplete = generated?.assets.some(asset => asset.status === 'complete') ?? false;
+        const status = signal.aborted || !anyComplete ? 'failed' : 'complete';
+        store.setCampaignStatus(campaignId, status);
+        if (generated) sendEvent(res, { type: 'campaign', campaign: { ...generated, status } });
         sendEvent(res, { type: 'done' });
       } catch (error) {
-        if (store.getCampaign(campaignId)) store.setCampaignStatus(campaignId, 'failed');
+        log.error({ err: error, campaignId }, 'campaign generation failed');
+        if (store.getCampaign(campaignId)) {
+          store.failInFlightAssets(campaignId);
+          store.setCampaignStatus(campaignId, 'failed');
+        } else if (cacheKey) {
+          idempotencyCache.delete(cacheKey);
+        }
         sendEvent(res, { type: 'error', message: error instanceof Error ? error.message : 'Generation failed' });
       } finally {
         clearInterval(heartbeat);
@@ -403,8 +420,9 @@ export function createApp(options: AppOptions) {
           updated = store.appendRevision(asset.id, { ...revisionBase(refinementPrompt, 'refined'), ...image });
         }
         res.json({ asset: updated });
-      } catch {
-        throw new UpstreamError('Refinement failed, try again');
+      } catch (error) {
+        log.warn({ err: error, assetId: asset.id }, 'refine failed');
+        throw new UpstreamError(upstreamMessage(error));
       }
     })
   );
@@ -443,8 +461,9 @@ export function createApp(options: AppOptions) {
           updated = store.appendRevision(asset.id, { ...revisionBase(null, 'generated'), ...image });
         }
         res.json({ asset: updated });
-      } catch {
-        throw new UpstreamError('Regeneration failed, try again');
+      } catch (error) {
+        log.warn({ err: error, assetId: asset.id }, 'regenerate failed');
+        throw new UpstreamError(upstreamMessage(error));
       }
     })
   );

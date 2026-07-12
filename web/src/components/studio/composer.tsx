@@ -110,6 +110,7 @@ export function Composer({ brand }: { brand: Brand }) {
       <Button
         size="lg"
         disabled={!canGenerate}
+        aria-busy={isGenerating}
         onClick={() => generate({ prompt: prompt.trim(), channels, ...styleRequest })}
       >
         {isGenerating ? 'On the wire…' : 'Put it on the wire'}

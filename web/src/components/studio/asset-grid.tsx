@@ -25,8 +25,14 @@ function PendingLines() {
 }
 
 function AssetPreview({ asset, isRetrying }: { asset: Asset; isRetrying: boolean }) {
+  const assetError = useStudioStore(s => s.assetErrors[asset.id] ?? null);
   if (asset.status === 'failed' && !isRetrying) {
-    return <p className="text-danger text-sm">Generation failed. Run this channel again.</p>;
+    return (
+      <div className="w-full">
+        <p className="text-danger text-sm">Generation failed. Run this channel again.</p>
+        {assetError && <p className="text-faint mt-1 font-mono text-xs break-words">{assetError}</p>}
+      </div>
+    );
   }
   const revision = asset.revisions.at(-1);
   if (!revision || isRetrying) return <PendingLines />;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 import tw from 'tailwind-styled-components';
@@ -29,13 +29,18 @@ const SOURCE_LABELS = { generated: null, refined: 'refined', manual: 'manual' } 
 export function AssetDetail() {
   const asset = useStudioStore(s => s.campaign?.assets.find(a => a.id === s.selectedAssetId) ?? null);
   const selectAsset = useStudioStore(s => s.selectAsset);
-  const { refine, isRefining, error } = useRefineAsset();
-  const { regenerate, isRegenerating, error: regenerateError } = useRegenerateAsset();
-  const { save, isSaving, error: saveError } = useSaveRevision();
-  const { restore, isRestoring, error: restoreError } = useRestoreRevision();
+  const { refine, isRefining } = useRefineAsset();
+  const { regenerate, isRegenerating } = useRegenerateAsset();
+  const { save, isSaving } = useSaveRevision();
+  const { restore, isRestoring } = useRestoreRevision();
   const [revisionIndex, setRevisionIndex] = useState<number | null>(null);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [draft, setDraft] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActionError(null);
+  }, [asset?.id]);
 
   const revisions = asset?.revisions ?? [];
   const activeIndex = revisionIndex !== null && revisionIndex < revisions.length ? revisionIndex : revisions.length - 1;
@@ -49,8 +54,10 @@ export function AssetDetail() {
 
   const restoreCurrentRevision = async () => {
     if (!asset || !revision || activeIndex === revisions.length - 1) return;
-    await restore(asset.id, revision.id);
-    setRevisionIndex(null);
+    setActionError(null);
+    const failure = await restore(asset.id, revision.id);
+    setActionError(failure);
+    if (!failure) setRevisionIndex(null);
   };
   const isDirty =
     asset?.kind === 'text' && revision && 'body' in revision && draft.trim().length > 0 && draft !== revision.body;
@@ -60,28 +67,37 @@ export function AssetDetail() {
     setRevisionIndex(null);
     setRefinePrompt('');
     setDraft('');
+    setActionError(null);
   };
 
   const sendRefinement = async () => {
     if (!asset || refinePrompt.trim().length === 0) return;
-    await refine(asset.id, refinePrompt.trim());
-    setRefinePrompt('');
-    setRevisionIndex(null);
+    setActionError(null);
+    const failure = await refine(asset.id, refinePrompt.trim());
+    setActionError(failure);
+    if (!failure) {
+      setRefinePrompt('');
+      setRevisionIndex(null);
+    }
   };
 
   const sendRegenerate = async () => {
     if (!asset) return;
-    await regenerate(asset.id);
-    setRevisionIndex(null);
+    setActionError(null);
+    const failure = await regenerate(asset.id);
+    setActionError(failure);
+    if (!failure) setRevisionIndex(null);
   };
 
   const saveDraft = async () => {
     if (!asset || !isDirty) return;
-    if (await save(asset.id, draft)) setRevisionIndex(null);
+    setActionError(null);
+    const failure = await save(asset.id, draft);
+    setActionError(failure);
+    if (!failure) setRevisionIndex(null);
   };
 
   const open = Boolean(asset && revision);
-  const actionError = error ?? regenerateError ?? saveError ?? restoreError;
 
   return (
     <Drawer open={open} label={asset ? `Edit ${CHANNEL_LABELS[asset.channel]} draft` : 'Edit draft'} onClose={close}>
