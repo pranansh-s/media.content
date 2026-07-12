@@ -69,6 +69,12 @@ function isTextChannel(channel: GeneratableChannel): channel is TextChannel {
 function upstreamMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Generation failed';
   const statusCode = (error as { statusCode?: number }).statusCode;
+  if (statusCode === 429) {
+    const retrySeconds = error.message.match(/retry in (\d+(?:\.\d+)?)s/i)?.[1];
+    return retrySeconds
+      ? `Free-tier quota hit — try again in ~${Math.ceil(Number(retrySeconds))}s.`
+      : 'Free-tier quota hit — try again later.';
+  }
   return statusCode ? `Upstream ${statusCode}: ${error.message}` : error.message;
 }
 

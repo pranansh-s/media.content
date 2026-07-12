@@ -6,9 +6,10 @@ import tw from 'tailwind-styled-components';
 
 import {
   CUSTOM_STYLE_MAX_LENGTH,
-  GENERATABLE_CHANNELS,
+  IMAGE_CHANNELS,
   PRESET_STYLES,
   PROMPT_MAX_LENGTH,
+  TEXT_CHANNELS,
   VIDEO_CHANNELS,
 } from '@media-content/shared';
 
@@ -23,17 +24,17 @@ import { useStudioStore } from '@/stores/studio';
 
 import { CHANNEL_LABELS } from '@/constants/channels';
 import type { SelectOption } from '@/components/ui/select';
-import type { Brand, GeneratableChannel, StyleId } from '@media-content/shared';
+import type { Brand, StyleId, TextChannel } from '@media-content/shared';
 
 export function Composer({ brand }: { brand: Brand }) {
   const [prompt, setPrompt] = useState('');
-  const [channels, setChannels] = useState<GeneratableChannel[]>(['tweet', 'linkedin']);
+  const [channels, setChannels] = useState<TextChannel[]>(['tweet', 'linkedin']);
   const [styleId, setStyleId] = useState<'' | 'custom' | StyleId>('');
   const [customStyle, setCustomStyle] = useState('');
   const isGenerating = useStudioStore(s => s.isGenerating);
   const generate = useGenerateCampaign();
 
-  const toggleChannel = (channel: GeneratableChannel) => {
+  const toggleChannel = (channel: TextChannel) => {
     setChannels(current => (current.includes(channel) ? current.filter(c => c !== channel) : [...current, channel]));
   };
 
@@ -71,12 +72,12 @@ export function Composer({ brand }: { brand: Brand }) {
       <div>
         <FieldLabel $as="p">Channels</FieldLabel>
         <ChipRow>
-          {GENERATABLE_CHANNELS.map(channel => (
+          {TEXT_CHANNELS.map(channel => (
             <Chip key={channel} selected={channels.includes(channel)} onClick={() => toggleChannel(channel)}>
               {CHANNEL_LABELS[channel]}
             </Chip>
           ))}
-          {VIDEO_CHANNELS.map(channel => (
+          {[...IMAGE_CHANNELS, ...VIDEO_CHANNELS].map(channel => (
             <Chip key={channel} disabled title="On the roadmap">
               {CHANNEL_LABELS[channel]} · soon
             </Chip>

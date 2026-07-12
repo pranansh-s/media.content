@@ -1,4 +1,4 @@
-import type { GeneratableChannel } from '@media-content/shared';
+import type { TextChannel } from '@media-content/shared';
 
 export const HEADER_NAV = [
   { href: '#channels', label: 'channels' },
@@ -11,7 +11,7 @@ export const HEADER_CTA = 'Open the studio';
 export const HERO = {
   eyebrow: 'For teams without a press desk',
   title: ['Your launch,', 'syndicated.'],
-  lead: 'Write one brief. media.content turns it into tweets, LinkedIn posts, release notes, articles, and banners — in your voice, on your brand, ready to post.',
+  lead: 'Write one brief. media.content turns it into tweets, LinkedIn posts, release notes, and articles — in your voice, on your brand, ready to post.',
   primaryCta: 'Open the studio',
   secondaryCta: 'see how it works →',
 };
@@ -32,7 +32,7 @@ export const HERO_WIRE = {
     },
     { tag: 'REL', time: '09:42:16', snippet: "## What's new — Streaming alerts, 4x faster ingest, new dashboard." },
     { tag: 'DEV', time: '09:42:21', snippet: '# How we built streaming alerts on a single Postgres box' },
-    { tag: 'BNR', time: '09:42:24', snippet: '1500 x 500 launch banner, brand colors applied.' },
+    { tag: 'RDT', time: '09:42:24', snippet: 'We rebuilt our alerting pipeline and cut delivery to 5 minutes. AMA.' },
   ],
 };
 
@@ -65,20 +65,18 @@ export const CHANNELS = {
   eyebrow: 'Channels',
   title: 'One story, told the way each channel expects',
   roadmap: {
-    heading: 'Video & product demos',
+    heading: 'Banners, social images, video & product demos',
     badge: 'on the roadmap',
   },
 };
 
-export const CHANNEL_NOTES: Record<GeneratableChannel, string> = {
+export const CHANNEL_NOTES: Record<TextChannel, string> = {
   tweet: 'Short, sharp, thread-ready.',
   linkedin: 'Professional register without the cringe.',
   reddit: 'Reads like a person, not a press release.',
   devto: 'Technical walkthroughs with real structure.',
   medium: 'Longform storytelling from your brief.',
   'github-release': 'Changelogs your users will actually read.',
-  banner: 'On-brand headers, sized for each platform.',
-  'social-image': 'Open-graph cards that get the click.',
 };
 
 export const AUDIENCE = {
@@ -92,7 +90,7 @@ export const AUDIENCE = {
     },
     {
       role: 'Engineer running the launch',
-      caption: 'Wrote the release notes, now needs a LinkedIn post and a banner.',
+      caption: 'Wrote the release notes, now needs a LinkedIn post and a launch tweet.',
     },
     {
       role: 'Two-person team',

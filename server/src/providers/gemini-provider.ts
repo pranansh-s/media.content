@@ -1,26 +1,20 @@
 import { google } from '@ai-sdk/google';
-import { generateImage, generateText } from 'ai';
+import { generateText } from 'ai';
 
-import type { ContentProvider, GeneratedImage, ImageSpec, TextSpec } from './content-provider';
-import type { ImageModel, LanguageModel } from 'ai';
+import type { ContentProvider, TextSpec } from './content-provider';
+import type { LanguageModel } from 'ai';
 
-import { buildImagePrompt, buildTextPrompt } from '../prompts/prompts';
+import { buildTextPrompt } from '../prompts/prompts';
 
 interface GeminiProviderOptions {
-  saveImage: (bytes: Uint8Array, mediaType: string) => Promise<string>;
   textModel?: LanguageModel;
-  imageModel?: ImageModel;
 }
 
-export class GeminiProvider implements ContentProvider {
+export class GeminiProvider implements Pick<ContentProvider, 'generateText'> {
   private readonly textModel: LanguageModel;
-  private readonly imageModel: ImageModel;
-  private readonly saveImage: GeminiProviderOptions['saveImage'];
 
-  constructor(options: GeminiProviderOptions) {
-    this.textModel = options.textModel ?? google(process.env.GEMINI_TEXT_MODEL ?? 'gemini-3.5-flash');
-    this.imageModel = options.imageModel ?? google.image(process.env.GEMINI_IMAGE_MODEL ?? 'gemini-3.1-flash-image');
-    this.saveImage = options.saveImage;
+  constructor(options: GeminiProviderOptions = {}) {
+    this.textModel = options.textModel ?? google(process.env.GEMINI_TEXT_MODEL ?? 'gemini-3.1-flash-lite');
   }
 
   async generateText(spec: TextSpec): Promise<string> {
@@ -33,18 +27,5 @@ export class GeminiProvider implements ContentProvider {
       abortSignal: spec.signal,
     });
     return result.text.trim();
-  }
-
-  async generateImage(spec: ImageSpec): Promise<GeneratedImage> {
-    const { prompt, aspectRatio } = buildImagePrompt(spec);
-    const { image } = await generateImage({
-      model: this.imageModel,
-      prompt,
-      aspectRatio,
-      maxRetries: 2,
-      abortSignal: spec.signal,
-    });
-    const url = await this.saveImage(image.uint8Array, image.mediaType);
-    return { url, alt: `${spec.brand.name} ${spec.channel}: ${spec.prompt.slice(0, 80)}` };
   }
 }

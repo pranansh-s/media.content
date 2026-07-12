@@ -14,9 +14,15 @@ if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
 }
 
 const imageStore = createImageStore();
+const textProvider = new GeminiProvider();
 const app = createApp({
-  provider: new GeminiProvider({ saveImage: imageStore.save }),
-  db: openDatabase(process.env.DB_PATH ?? DEFAULT_DB_PATH),
+  provider: {
+    generateText: spec => textProvider.generateText(spec),
+    generateImage: async () => {
+      throw new Error('Image generation is on the roadmap and not available yet');
+    },
+  },
+  db: openDatabase(process.env.DB_PATH || DEFAULT_DB_PATH),
   imageDir: imageStore.dir,
 });
 const port = Number(process.env.PORT ?? 4000);

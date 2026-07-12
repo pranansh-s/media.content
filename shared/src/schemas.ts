@@ -100,7 +100,7 @@ export const brandSchema = z.object({
 export const createCampaignRequestSchema = z
   .object({
     prompt: z.string().trim().min(1).max(PROMPT_MAX_LENGTH),
-    channels: z.array(generatableChannelSchema).min(1),
+    channels: z.array(textChannelSchema).min(1),
     styleId: styleIdSchema.optional(),
     customStyle: z.string().trim().min(1).max(CUSTOM_STYLE_MAX_LENGTH).optional(),
   })
