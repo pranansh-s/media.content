@@ -158,7 +158,6 @@ const Timestamp = tw.span`
 `;
 
 const Status = tw.span<{ $failed: boolean }>`
-  ml-auto
   font-mono
   text-[10px]
   uppercase

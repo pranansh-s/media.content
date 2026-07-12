@@ -255,7 +255,9 @@ const RefinedWith = tw.p`
 const DraftRow = tw.div`
   mt-2
   flex
+  items-center
   justify-end
+  gap-4
 `;
 
 const SaveButton = tw.button`
