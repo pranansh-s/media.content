@@ -26,7 +26,8 @@ const app = createApp({
   imageDir: imageStore.dir,
 });
 const port = Number(process.env.PORT ?? 4000);
+const host = process.env.SERVER_HOST ?? '127.0.0.1';
 
-app.listen(port, () => {
-  console.log(`media.content server (shared v${SHARED_VERSION}) listening on :${port}`);
+app.listen(port, host, () => {
+  console.log(`media.content server (shared v${SHARED_VERSION}) listening on ${host}:${port}`);
 });

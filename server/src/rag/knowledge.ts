@@ -93,9 +93,10 @@ export async function retrieve(
   }
   if (!queryEmbedding) return [];
   return chunks
+    .filter(chunk => chunk.embedding.length === queryEmbedding.length)
     .map(chunk => ({
       text: chunk.text,
-      score: cosineSimilarity(Array.from(queryEmbedding!), Array.from(chunk.embedding)),
+      score: cosineSimilarity(Array.from(queryEmbedding), Array.from(chunk.embedding)),
     }))
     .filter(candidate => candidate.score >= SIMILARITY_FLOOR)
     .sort((a, b) => b.score - a.score)

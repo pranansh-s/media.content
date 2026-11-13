@@ -6,7 +6,7 @@ if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_
   );
 }
 
-const isProtectedRoute = createRouteMatcher(['/studio(.*)']);
+const isProtectedRoute = createRouteMatcher(['/studio(.*)', '/api(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {

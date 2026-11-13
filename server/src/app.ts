@@ -75,7 +75,7 @@ function upstreamMessage(error: unknown): string {
       ? `Free-tier quota hit — try again in ~${Math.ceil(Number(retrySeconds))}s.`
       : 'Free-tier quota hit — try again later.';
   }
-  return statusCode ? `Upstream ${statusCode}: ${error.message}` : error.message;
+  return 'Generation failed. Please try again.';
 }
 
 function zodToValidation(error: ZodError): ValidationError {
@@ -135,7 +135,7 @@ export function createApp(options: AppOptions) {
   const allowlist = process.env.CORS_ORIGINS?.split(',')
     .map(o => o.trim())
     .filter(Boolean);
-  app.use(cors(allowlist ? { origin: allowlist, credentials: true } : {}));
+  app.use(cors(allowlist?.length ? { origin: allowlist, credentials: true } : { origin: false }));
   app.use(express.json({ limit: '256kb' }));
   app.use((req, res, next) => {
     const start = Date.now();

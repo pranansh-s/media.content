@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
 import tw from 'tailwind-styled-components';
@@ -36,16 +36,13 @@ export function AssetDetail() {
   const [revisionIndex, setRevisionIndex] = useState<number | null>(null);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [draft, setDraft] = useState('');
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setActionError(null);
-  }, [asset?.id]);
+  const [actionError, setActionError] = useState<{ assetId: string; message: string } | null>(null);
 
   const revisions = asset?.revisions ?? [];
   const activeIndex = revisionIndex !== null && revisionIndex < revisions.length ? revisionIndex : revisions.length - 1;
   const revision = revisions[activeIndex];
   const isBusy = isRefining || isRegenerating || isSaving || isRestoring;
+  const visibleActionError = actionError && asset && actionError.assetId === asset.id ? actionError.message : null;
 
   const copyToClipboard = async () => {
     if (!revision || !('body' in revision)) return;
@@ -56,7 +53,7 @@ export function AssetDetail() {
     if (!asset || !revision || activeIndex === revisions.length - 1) return;
     setActionError(null);
     const failure = await restore(asset.id, revision.id);
-    setActionError(failure);
+    setActionError(failure ? { assetId: asset.id, message: failure } : null);
     if (!failure) setRevisionIndex(null);
   };
   const isDirty =
@@ -74,7 +71,7 @@ export function AssetDetail() {
     if (!asset || refinePrompt.trim().length === 0) return;
     setActionError(null);
     const failure = await refine(asset.id, refinePrompt.trim());
-    setActionError(failure);
+    setActionError(failure ? { assetId: asset.id, message: failure } : null);
     if (!failure) {
       setRefinePrompt('');
       setRevisionIndex(null);
@@ -85,7 +82,7 @@ export function AssetDetail() {
     if (!asset) return;
     setActionError(null);
     const failure = await regenerate(asset.id);
-    setActionError(failure);
+    setActionError(failure ? { assetId: asset.id, message: failure } : null);
     if (!failure) setRevisionIndex(null);
   };
 
@@ -93,7 +90,7 @@ export function AssetDetail() {
     if (!asset || !isDirty) return;
     setActionError(null);
     const failure = await save(asset.id, draft);
-    setActionError(failure);
+    setActionError(failure ? { assetId: asset.id, message: failure } : null);
     if (!failure) setRevisionIndex(null);
   };
 
@@ -188,7 +185,7 @@ export function AssetDetail() {
                 {isRegenerating ? 'back on the wire…' : 'regenerate from the brief'}
               </RegenerateButton>
             </RegenerateRow>
-            {actionError && <ErrorText>{actionError}</ErrorText>}
+            {visibleActionError && <ErrorText>{visibleActionError}</ErrorText>}
           </RefineSection>
         </>
       )}
