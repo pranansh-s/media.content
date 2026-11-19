@@ -269,6 +269,7 @@ export function createApp(options: AppOptions) {
           if (!existing) throw new ConflictError('A campaign with this Idempotency-Key is already being created');
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('X-Accel-Buffering', 'no');
           res.flushHeaders();
           sendEvent(res, { type: 'campaign', campaign: existing });
           for (const asset of existing.assets) sendEvent(res, { type: 'asset', asset });
@@ -299,6 +300,7 @@ export function createApp(options: AppOptions) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
       res.flushHeaders();
 
       const heartbeat = setInterval(() => {

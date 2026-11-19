@@ -2,7 +2,7 @@ import { Atkinson_Hyperlegible, Bricolage_Grotesque, IBM_Plex_Mono } from 'next/
 
 import { Providers } from '@/components/providers';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 import './globals.css';
 
@@ -23,6 +23,11 @@ const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'media.content — your one-person newsroom',
   description:
@@ -40,7 +45,6 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${bricolage.variable} ${atkinson.variable} ${plexMono.variable}`}
     >
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
       </body>

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "start": "node --import tsx src/index.ts",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "vitest run"
